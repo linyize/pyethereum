@@ -4,7 +4,7 @@ from ethereum.utils import encode_hex, privtoaddr
 from ethereum.hybrid_casper import casper_utils
 import re
 
-ALLOC = {a: {'balance': 500*10**19} for a in tester.accounts[:10]}
+ALLOC = {a: {'balance': 500*10**20} for a in tester.accounts[:10]}
 
 class Validator(object):
     def __init__(self, withdrawal_addr, key):
@@ -61,7 +61,7 @@ class Validator(object):
 
 class TestLangHybrid(object):
     # For a custom Casper parser, overload generic parser and construct your chain
-    def __init__(self, epoch_length, withdrawal_delay, base_interest_factor, base_penalty_factor):
+    def __init__(self, epoch_length, withdrawal_delay, base_interest_factor, base_penalty_factor, validator_deposit_size=5000 * 10**18):
         self.genesis = casper_utils.make_casper_genesis(
             env=Env(),
             alloc=ALLOC,
@@ -69,6 +69,7 @@ class TestLangHybrid(object):
             withdrawal_delay=withdrawal_delay,
             base_interest_factor=base_interest_factor,
             base_penalty_factor=base_penalty_factor)
+        self.validator_deposit_size = validator_deposit_size
         self.t = tester.Chain(genesis=self.genesis)
         self.casper = tester.ABIContract(self.t, casper_utils.casper_abi, self.t.chain.env.config['CASPER_ADDRESS'])
         self.saved_blocks = dict()
@@ -95,7 +96,7 @@ class TestLangHybrid(object):
 
     def join(self, number):
         withdrawal_addr = privtoaddr(tester.keys[number])
-        casper_utils.induct_validator(self.t, self.casper, tester.keys[number], 200 * 10**18)
+        casper_utils.induct_validator(self.t, self.casper, tester.keys[number], self.validator_deposit_size)
         self.validators[number] = Validator(withdrawal_addr, tester.keys[number])
 
     def vote(self, validator_index):

@@ -177,3 +177,37 @@ def test_vote_surround_slash(db):
     test_string = 'B J0 J1 J2 J3 B B S0 V0 V1 V2 V3 B V0 V1 V2 V3 B V0 V1 V2 V3 R0 B B B B B B B V0 B1'
     test = TestLangHybrid(15, 100, 0.02, 0.002)
     test.parse(test_string)
+
+def test_rewards_when_validation_is_finalizing(db):
+    """ Test that the validation rewards are positive when validators are finalizing epochs """
+    number_of_epochs = 5
+    vote_string = 'B1'
+    for i in range(number_of_epochs):
+        vote_string += ' B1 V0 V1 V2 V3 B'
+    test_string = 'B J0 J1 J2 J3 B B'
+    test = TestLangHybrid(15, 100, 0.02, 0.002, 5000 * 18**10)
+    test.parse(test_string)
+    casper = tester.ABIContract(test.t, casper_utils.casper_abi, test.t.chain.casper_address)
+    deposits_in_first_epoch = casper.get_total_curdyn_deposits()
+    test.parse(vote_string)
+    deposits_after_votes = casper.get_total_curdyn_deposits()
+    print('Total deposits in first dynasty: {}'.format(deposits_in_first_epoch))
+    print('Total deposits after {} rounds of voting: {}'.format(number_of_epochs, deposits_after_votes))
+    assert deposits_in_first_epoch < deposits_after_votes
+
+def test_rewards_when_validation_is_not_finalizing(db):
+    """ Test that the validation rewards are positive when validators are NOT finalizing epochs """
+    number_of_epochs = 5
+    vote_string = 'B1'
+    for i in range(number_of_epochs):
+        vote_string += ' B1 V0 B'
+    test_string = 'B J0 J1 J2 J3 B B'
+    test = TestLangHybrid(15, 100, 0.02, 0.002, 5000 * 18**10)
+    test.parse(test_string)
+    casper = tester.ABIContract(test.t, casper_utils.casper_abi, test.t.chain.casper_address)
+    deposits_in_first_epoch = casper.get_total_curdyn_deposits()
+    test.parse(vote_string)
+    deposits_after_votes = casper.get_total_curdyn_deposits()
+    print('Total deposits in first dynasty: {}'.format(deposits_in_first_epoch))
+    print('Total deposits after {} rounds of voting: {}'.format(number_of_epochs, deposits_after_votes))
+    assert deposits_in_first_epoch > deposits_after_votes
