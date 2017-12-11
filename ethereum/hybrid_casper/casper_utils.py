@@ -1,10 +1,8 @@
 import os
 import sys
-import copy
 
 from ethereum import utils, abi, genesis_helpers
 from ethereum.hybrid_casper.casper_initiating_transactions import mk_initializers, purity_checker_address, purity_checker_abi
-from ethereum.block import BLANK_UNCLES_HASH
 from ethereum.hybrid_casper import consensus
 from ethereum.hybrid_casper.config import config
 from ethereum.messages import apply_transaction
@@ -22,7 +20,7 @@ casper_translator = abi.ContractTranslator(casper_abi)
 purity_translator = abi.ContractTranslator(purity_checker_abi)
 
 # Get a genesis state which is primed for Casper
-def make_casper_genesis(env, **kwargs):
+def make_casper_genesis(env, header=None, **kwargs):
     assert isinstance(env, config.Env)
 
     # The Casper-specific dynamic config declaration
@@ -36,7 +34,7 @@ def make_casper_genesis(env, **kwargs):
     init_txs, casper_address = mk_initializers(config.casper_config, config.casper_config['NULL_SENDER'])
     config.casper_config['CASPER_ADDRESS'] = casper_address
     # Create state and apply required state_transitions for initializing Casper
-    state = genesis_helpers.mk_basic_state(alloc, header=None, env=config.Env(config=config.casper_config))
+    state = genesis_helpers.mk_basic_state(alloc, header=header, env=config.Env(config=config.casper_config))
     state.gas_limit = 10**8
     for tx in init_txs:
         state.set_balance(utils.privtoaddr(config.casper_config['NULL_SENDER']), 15**18)
