@@ -1,6 +1,6 @@
 import pytest
-from ethereum.utils import privtoaddr
 from ethereum.tools import tester
+from ethereum.config import Env
 from ethereum.tests.utils import new_db
 from ethereum.db import EphemDB
 from ethereum.hybrid_casper import casper_utils
@@ -28,7 +28,13 @@ def db():
 alt_db = db
 
 def init_chain_and_casper():
-    genesis = casper_utils.make_casper_genesis(ALLOC, EPOCH_LENGTH, 100, 0.02, 0.002)
+    genesis = casper_utils.make_casper_genesis(
+        env=Env(),
+        alloc=ALLOC,
+        epoch_length=EPOCH_LENGTH,
+        withdrawal_delay=100,
+        base_interest_factor=0.02,
+        base_penalty_factor=0.002)
     t = tester.Chain(genesis=genesis)
     casper = tester.ABIContract(t, casper_utils.casper_abi, t.chain.config['CASPER_ADDRESS'])
     return t, casper
@@ -57,10 +63,11 @@ def test_mining_block_rewards(db):
     blk3 = t.mine(coinbase=a1)
     blk4 = t.mine(coinbase=a1)
     t.mine(coinbase=a1)
-    assert t.chain.state.get_balance(a1) == t.chain.env.config['BLOCK_REWARD'] + t.chain.mk_poststate_of_blockhash(blk4.hash).get_balance(a1)
-    assert t.chain.state.get_balance(a1) == t.chain.env.config['BLOCK_REWARD'] * 2 + t.chain.mk_poststate_of_blockhash(blk3.hash).get_balance(a1)
-    assert t.chain.state.get_balance(a1) == t.chain.env.config['BLOCK_REWARD'] * 3 + t.chain.mk_poststate_of_blockhash(blk2.hash).get_balance(a1)
-    assert t.chain.state.get_balance(a1) == t.chain.env.config['BLOCK_REWARD'] * 4 + t.chain.mk_poststate_of_blockhash(genesis.hash).get_balance(a1)
+    balance = t.chain.state.get_balance(a1)
+    assert balance == t.chain.env.config['BYZANTIUM_BLOCK_REWARD'] + t.chain.mk_poststate_of_blockhash(blk4.hash).get_balance(a1)
+    assert balance == t.chain.env.config['BYZANTIUM_BLOCK_REWARD'] * 2 + t.chain.mk_poststate_of_blockhash(blk3.hash).get_balance(a1)
+    assert balance == t.chain.env.config['BYZANTIUM_BLOCK_REWARD'] * 3 + t.chain.mk_poststate_of_blockhash(blk2.hash).get_balance(a1)
+    assert balance == t.chain.env.config['BYZANTIUM_BLOCK_REWARD'] * 4 + t.chain.mk_poststate_of_blockhash(genesis.hash).get_balance(a1)
     assert blk2.prevhash == genesis.hash
 
 
