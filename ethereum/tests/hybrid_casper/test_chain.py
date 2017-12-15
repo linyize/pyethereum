@@ -57,10 +57,10 @@ def test_mining_block_rewards(db):
     blk3 = t.mine(coinbase=a1)
     blk4 = t.mine(coinbase=a1)
     t.mine(coinbase=a1)
-    assert t.chain.state.get_balance(a1) == t.chain.env.config['BLOCK_REWARD'] + t.chain.mk_poststate_of_blockhash(blk4.hash).get_balance(a1)
-    assert t.chain.state.get_balance(a1) == t.chain.env.config['BLOCK_REWARD'] * 2 + t.chain.mk_poststate_of_blockhash(blk3.hash).get_balance(a1)
-    assert t.chain.state.get_balance(a1) == t.chain.env.config['BLOCK_REWARD'] * 3 + t.chain.mk_poststate_of_blockhash(blk2.hash).get_balance(a1)
-    assert t.chain.state.get_balance(a1) == t.chain.env.config['BLOCK_REWARD'] * 4 + t.chain.mk_poststate_of_blockhash(genesis.hash).get_balance(a1)
+    assert t.chain.state.get_balance(a1) == t.chain.env.config['BYZANTIUM_BLOCK_REWARD'] + t.chain.mk_poststate_of_blockhash(blk4.hash).get_balance(a1)
+    assert t.chain.state.get_balance(a1) == t.chain.env.config['BYZANTIUM_BLOCK_REWARD'] * 2 + t.chain.mk_poststate_of_blockhash(blk3.hash).get_balance(a1)
+    assert t.chain.state.get_balance(a1) == t.chain.env.config['BYZANTIUM_BLOCK_REWARD'] * 3 + t.chain.mk_poststate_of_blockhash(blk2.hash).get_balance(a1)
+    assert t.chain.state.get_balance(a1) == t.chain.env.config['BYZANTIUM_BLOCK_REWARD'] * 4 + t.chain.mk_poststate_of_blockhash(genesis.hash).get_balance(a1)
     assert blk2.prevhash == genesis.hash
 
 
