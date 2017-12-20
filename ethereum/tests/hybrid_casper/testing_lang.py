@@ -3,7 +3,7 @@ from ethereum.utils import encode_hex, privtoaddr
 from ethereum.hybrid_casper import casper_utils
 import re
 
-ALLOC = {a: {'balance': 500*10**19} for a in tester.accounts[:10]}
+ALLOC = {a: {'balance': 500*10**24} for a in tester.accounts[:10]}
 
 class Validator(object):
     def __init__(self, withdrawal_addr, key):
@@ -60,12 +60,13 @@ class Validator(object):
 
 class TestLangHybrid(object):
     # For a custom Casper parser, overload generic parser and construct your chain
-    def __init__(self, epoch_length, withdrawal_delay, base_interest_factor, base_penalty_factor):
+    def __init__(self, epoch_length, withdrawal_delay, base_interest_factor, base_penalty_factor, deposit_size=200 * 10**18):
         self.genesis = casper_utils.make_casper_genesis(ALLOC, epoch_length, withdrawal_delay, base_interest_factor, base_penalty_factor)
         self.t = tester.Chain(genesis=self.genesis)
         self.casper = tester.ABIContract(self.t, casper_utils.casper_abi, self.t.chain.env.config['CASPER_ADDRESS'])
         self.saved_blocks = dict()
         self.validators = dict()
+        self.deposit_size = deposit_size
         # Register token handlers
         self.handlers = dict()
         self.handlers['B'] = self.mine_blocks
@@ -88,13 +89,13 @@ class TestLangHybrid(object):
 
     def join(self, number):
         withdrawal_addr = privtoaddr(tester.keys[number])
-        casper_utils.induct_validator(self.t, self.casper, tester.keys[number], 200 * 10**18)
+        casper_utils.induct_validator(self.t, self.casper, tester.keys[number], self.deposit_size)
         self.validators[number] = Validator(withdrawal_addr, tester.keys[number])
 
     def vote(self, validator_index):
-        print('New Vote: CurrDynDeposits: {} - Prev Justified: {} - Prev Finalized: {} - Resize Factor: {}'.format(
+        print('New Vote: CurrDynDeposits: {} - Prev Justified: {} - Prev Finalized: {} - Latest nonvoter rescale: {} - Latest voter rescale {}'.format(
             self.casper.get_total_curdyn_deposits(), self.casper.get_recommended_source_epoch(),
-            self.casper.get_last_finalized_epoch(), self.casper.get_latest_resize_factor()))
+            self.casper.get_last_finalized_epoch(), self.casper.get_last_nonvoter_rescale(), self.casper.get_last_voter_rescale()))
         if self.casper.get_total_curdyn_deposits() > 0 and self.casper.get_total_prevdyn_deposits() > 0:
             print('Vote frac: {}'.format(self.casper.get_main_hash_voted_frac()))
         self.validators[validator_index].vote(self.casper)
