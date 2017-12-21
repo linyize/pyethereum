@@ -186,7 +186,8 @@ def apply_message(state, msg=None, **kwargs):
 
 
 def apply_transaction(state, tx):
-    if tx.to == state.config['CASPER_ADDRESS'] and tx.data[0:4] == b'\xe9\xdc\x06\x14':
+    if tx.to == state.config['CASPER_ADDRESS'] and tx.data[0:4] == b'\xe9\xdc\x06\x14' and \
+        tx.sender == b'\xdd\x05ez\x1e\x9e\xa8\x11\xdc<\xe1\xeas\xafH\xec\xf2\x9c-\x01':
         log_tx.debug("Applying CASPER VOTE transaction: {}".format(tx))
         return _apply_casper_vote_transaction(state, tx)
     else:
@@ -195,8 +196,6 @@ def apply_transaction(state, tx):
 
 
 def _apply_casper_vote_transaction(state, tx):
-    if tx.sender == state.config['NULL_SENDER'] or not tx.to == state.config['CASPER_ADDRESS']:
-        raise InvalidTransaction("Sender must be not be null sender and to must be the Casper contract address")
     state.logs = []
 
     validate_transaction(state, tx)
@@ -240,6 +239,7 @@ def _apply_casper_vote_transaction(state, tx):
                      startgas=tx.startgas, gas_remained=gas_remained)
         state.delta_balance(tx.sender, tx.gasprice * gas_remained)
         state.delta_balance(state.block_coinbase, tx.gasprice * gas_used)
+        state.gas_used += gas_used
         output = b''
         success = 0
     # Transaction success

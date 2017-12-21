@@ -104,18 +104,24 @@ def test_head_change_for_longer_pow_chain(db):
 
 def test_no_gas_cost_for_successful_casper_vote(db):
     """ This tests that the chain is the chain is """
-    sender = b'\x82\xa9x\xb3\xf5\x96*[\tW\xd9\xee\x9e\xefG.\xe5[B\xf1'
-    test_string = 'B J0 B B'
+    # Note: Using V1 because V0 is also coinbase
+    sender = b"}WzY{'B\xb4\x98\xcb\\\xf0\xc2l\xdc\xd7&\xd3\x9en"
+    coinbase = b'\x82\xa9x\xb3\xf5\x96*[\tW\xd9\xee\x9e\xefG.\xe5[B\xf1'
+    test_string = 'B J1 J2 B B V2 B B'
     test = TestLangHybrid(15, 100, 0.02, 0.002)
     test.parse(test_string)
     pre_balance = test.t.head_state.get_balance(sender)
     pre_block_gas_used = test.t.head_state.gas_used
-    test_string = 'V0'
+    coinbase = test.t.head_state.block_coinbase
+    pre_coinbase_balance = test.t.head_state.get_balance(coinbase)
+    test_string = 'V1'
     test.parse(test_string)
     post_balance = test.t.head_state.get_balance(sender)
     post_block_gas_used = test.t.head_state.gas_used
+    post_coinbase_balance = test.t.head_state.get_balance(coinbase)
     assert pre_balance == post_balance
     assert pre_block_gas_used == post_block_gas_used
+    assert pre_coinbase_balance < post_coinbase_balance
 
 
 def test_costs_gas_for_failed_casper_vote(db):
@@ -128,17 +134,20 @@ def test_costs_gas_for_failed_casper_vote(db):
     post_join_balance = test.t.head_state.get_balance(sender)
     cost_of_joining = pre_join_balance - post_join_balance
     pre_balance = test.t.head_state.get_balance(sender)
-    test_string = 'J1 V0 B B'
+    pre_block_gas_used = test.t.head_state.gas_used
+    test_string = 'V0 J1 B B'
     with pytest.raises(AssertionError):
         test.parse(test_string)
     post_balance = test.t.head_state.get_balance(sender)
+    post_block_gas_used = test.t.head_state.gas_used
     # Gas is charged for failed vote
     assert pre_balance > post_balance + cost_of_joining
+    assert pre_block_gas_used < post_block_gas_used
 
 
-def test_fails_if_all_casper_vote_transactions_are_not_first(db):
+def test_fails_if_all_casper_vote_transactions_are_not_last(db):
     """ This tests that the chain is the chain is """
-    test_string = 'B J0 B B J1 V0 B B'
+    test_string = 'B J0 B B V0 J1 B B'
     test = TestLangHybrid(15, 100, 0.02, 0.002)
     with pytest.raises(AssertionError):
         test.parse(test_string)
