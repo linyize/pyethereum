@@ -119,13 +119,13 @@ def validate_header(state, header):
     return True
 
 
-# Validate that casper transactions come first
-def validate_casper_vote_transaction_precedence(state, block):
-    reached_normal_transactions = False
+# Validate that casper transactions come last
+def validate_casper_vote_transaction_ordering(state, block):
+    reached_casper_vote_transactions = False
     for tx in block.transactions:
-        if not tx.to == state.env.config['CASPER_ADDRESS'] or not tx.data[0:4] == b'\xe9\xdc\x06\x14':
-            reached_normal_transactions = True
-        elif reached_normal_transactions:
+        if tx.to == state.env.config['CASPER_ADDRESS'] and tx.data[0:4] == b'\xe9\xdc\x06\x14':
+            reached_casper_vote_transactions = True
+        elif reached_casper_vote_transactions:
             raise InvalidTransaction("Please put all Casper transactions first")
     return True
 

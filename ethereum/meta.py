@@ -4,7 +4,7 @@ from ethereum.block import Block, BlockHeader
 from ethereum.common import mk_block_from_prevstate, validate_header, \
     verify_execution_results, validate_transaction_tree, \
     set_execution_results, add_transactions, post_finalize, \
-    validate_casper_vote_transaction_precedence
+    validate_casper_vote_transaction_ordering
 from ethereum.consensus_strategy import get_consensus_strategy
 from ethereum.messages import apply_transaction
 from ethereum.state import State
@@ -26,7 +26,7 @@ def apply_block(state, block):
         assert cs.validate_uncles(state, block)
         assert validate_transaction_tree(state, block)
         # Makes sure all casper vote transactions come first
-        assert validate_casper_vote_transaction_precedence(state, block)
+        assert validate_casper_vote_transaction_ordering(state, block)
         # Process transactions
         for tx in block.transactions:
             apply_transaction(state, tx)
