@@ -43,6 +43,7 @@ def make_casper_genesis(alloc, epoch_length, withdrawal_delay, base_interest_fac
         assert success
         state.gas_used = 0
         state.set_balance(utils.privtoaddr(config.casper_config['NULL_SENDER']), 0)
+        state.set_balance(casper_address, 10**25)
     consensus.initialize(state)
     state.commit()
     return state
