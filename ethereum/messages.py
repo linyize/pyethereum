@@ -120,15 +120,10 @@ def config_fork_specific_validation(config, blknum, tx):
     if blknum >= config['CONSTANTINOPLE_FORK_BLKNUM']:
         tx.check_low_s_metropolis()
     else:
-        if tx.sender == null_address:
-            raise InvalidTransaction("EIP86 transactions not available yet")
         if blknum >= config['HOMESTEAD_FORK_BLKNUM']:
             tx.check_low_s_homestead()
     if blknum >= config["SPURIOUS_DRAGON_FORK_BLKNUM"]:
         if tx.network_id not in (None, config["NETWORK_ID"]):
-            raise InvalidTransaction("Wrong network ID")
-    else:
-        if tx.network_id is not None:
             raise InvalidTransaction("Wrong network ID")
     return True
 
@@ -186,8 +181,10 @@ def apply_message(state, msg=None, **kwargs):
 
 
 def apply_transaction(state, tx):
-    if tx.to == state.config['CASPER_ADDRESS'] and tx.data[0:4] == b'\xe9\xdc\x06\x14' and \
-        tx.sender == b'\xdd\x05ez\x1e\x9e\xa8\x11\xdc<\xe1\xeas\xafH\xec\xf2\x9c-\x01':
+    casper_contract = tx.to == state.env.config['CASPER_ADDRESS']
+    vote = tx.data[0:4] == b'\xe9\xdc\x06\x14'
+    null_sender = tx.sender == b'\xff' * 20
+    if casper_contract and vote and null_sender:
         log_tx.debug("Applying CASPER VOTE transaction: {}".format(tx))
         return _apply_casper_vote_transaction(state, tx)
     else:
