@@ -126,7 +126,7 @@ def validate_casper_vote_transaction_ordering(state, block):
         if tx.to == state.env.config['CASPER_ADDRESS'] and tx.data[0:4] == b'\xe9\xdc\x06\x14':
             reached_casper_vote_transactions = True
         elif reached_casper_vote_transactions:
-            raise InvalidTransaction("Please put all Casper transactions first")
+            raise InvalidTransaction("Please put all Casper transactions last")
     return True
 
 
@@ -137,6 +137,13 @@ def add_transactions(state, block, txqueue, min_gasprice=0):
     pre_txs = len(block.transactions)
     log.info('Adding transactions, %d in txqueue, %d dunkles' %
              (len(txqueue.txs), pre_txs))
+    transactions, caspert_vote_transactions = [], []
+    for ordered_tx in txqueue.txs:
+        if ordered_tx.tx.to == state.config['CASPER_ADDRESS'] and ordered_tx.tx.data[0:4] == b'\xe9\xdc\x06\x14':
+            caspert_vote_transactions.append(ordered_tx)
+        else:
+            transactions.append(ordered_tx)
+    txqueue.tx = transactions + caspert_vote_transactions
     while True:
         tx = txqueue.pop_transaction(max_gas=state.gas_limit - state.gas_used,
                                      min_gasprice=min_gasprice)
