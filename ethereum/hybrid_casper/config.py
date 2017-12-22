@@ -10,6 +10,7 @@ casper_config = dict(
     CONSENSUS_STRATEGY='hybrid_casper',
     NULL_SENDER=b'\xff' * 32,
     EPOCH_LENGTH=50,
+    NON_REVERT_MIN_DEPOSIT=10**18,
     OWNER=a0
 )
 
