@@ -19,7 +19,7 @@ def initialize(state, block=None):
 
     # Initalize the next epoch in the Casper contract
     if state.block_number % state.config['EPOCH_LENGTH'] == 0 and state.block_number != 0:
-        key, account = state.config['NULL_SENDER'], privtoaddr(state.config['NULL_SENDER'])
+        key, account = state.config['SENDER'], privtoaddr(state.config['SENDER'])
         data = casper_utils.casper_translator.encode('initialize_epoch', [state.block_number // state.config['EPOCH_LENGTH']])
         transaction = transactions.Transaction(state.get_nonce(account), 0, 3141592,
                                                state.config['CASPER_ADDRESS'], 0, data).sign(key)
