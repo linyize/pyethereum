@@ -3,7 +3,6 @@ import json
 import random
 import time
 import itertools
-from ethereum import utils
 from ethereum.utils import (
     parse_as_bin,
     big_endian_to_int,
@@ -77,7 +76,6 @@ class Chain(object):
         self.new_head_cb = new_head_cb
 
         self.head_hash = self.state.prev_headers[0].hash
-        self.checkpoint_head_hash = b'\x00' * 32
         self.checkpoint_head_score = 0
         self.casper_address = self.config['CASPER_ADDRESS']
         self.db.put(b'GENESIS_NUMBER', to_string(self.state.block_number))
@@ -105,13 +103,6 @@ class Chain(object):
         except Exception as e:
             log.error(e)
             return None
-
-    @property
-    def head_checkpoint(self):
-        checkpoint = self.get_block(self.checkpoint_head_hash)
-        if checkpoint is None:
-            return self.genesis
-        return checkpoint
 
     # ~~~~~~~~~~~~~~~~~~~~ ADD BLOCK ~~~~~~~~~~~~~~~~~~~~ #
 
@@ -206,25 +197,14 @@ class Chain(object):
             temp_state = self.mk_poststate_of_blockhash(block.header.prevhash)
         apply_block(temp_state, block)
         self.db.put(b'state:' + block.header.hash, temp_state.trie.root_hash)
+        # Check the last finalized checkpoint and store
+        casper = tester.ABIContract(tester.State(temp_state), casper_utils.casper_abi, self.config['CASPER_ADDRESS'])
+        if casper.get_last_finalized_epoch() == casper.get_current_epoch() - 1:
+            self.db.put(b'finalized:'+casper.get_checkpoint_hashes(casper.get_last_finalized_epoch()), b'true')
         # ~~~ Add block ~~~~ #
-        candidate_cp_hash, candidate_cp_score = self.get_checkpoint_hash_and_score(temp_state)
-        is_candidate_cp_child_of_head = self.is_child_checkpoint(block.hash, self.checkpoint_head_hash)
-        if (    # Candidate is not genesis
-                candidate_cp_hash is not None and
-                # Candidate score is either higher than head, or that it is a direct decendent of the head
-                (candidate_cp_score > self.checkpoint_head_score or is_candidate_cp_child_of_head) and
-                # Candidate epoch is higher than the head
-                self.get_block(candidate_cp_hash).number > self.head_checkpoint.number):
-            # Set the new head
-            new_head, _ = self.find_heaviest_pow_block(self.head_checkpoint)
-            self.checkpoint_head_hash = candidate_cp_hash
-            self.checkpoint_head_score = candidate_cp_score
-            self.set_head(new_head)
+        if self.get_score(self.state, self.head) < self.get_score(temp_state, block) and not self.switch_reverts_finalized_block(self.head, block):
+            self.set_head(block)
             log.info('Changed head to: {}'.format(block.number))
-        elif is_candidate_cp_child_of_head:
-            if self.get_pow_difficulty(self.head) < self.get_pow_difficulty(block):
-                log.info('Added block number {} to head'.format(block.number))
-                self.set_head(block)
         else:
             log.info('Skipping block which is not a descendant of current head checkpoint')
         # Are there blocks that we received that were waiting for this block?
@@ -234,6 +214,33 @@ class Chain(object):
                 self.add_block(_blk)
             del self.parent_queue[block.header.hash]
         return True
+
+    def get_score(self, prestate, block):
+        casper = tester.ABIContract(tester.State(prestate), casper_utils.casper_abi, self.config['CASPER_ADDRESS'])
+        return casper.get_last_justified_epoch() * 10**40 + self.get_pow_difficulty(block)
+
+    def switch_reverts_finalized_block(self, old_head, new_head):
+        while old_head.number > new_head.number:
+            if b'finalized:'+old_head.hash in self.db:
+                log.info('No revert: old_head hash {} is finalized'.format(encode_hex(old_head.hash)))
+                return True
+            old_head = self.get_parent(old_head)
+        while new_head.number > old_head.number:
+            new_head = self.get_parent(new_head)
+            if new_head is None:
+                log.info('Revert: new_head is None')
+                return False
+        while new_head.hash != old_head.hash:
+            if b'finalized:'+old_head.hash in self.db:
+                log.info('No revert: old_head hash {} is finalized'.format(encode_hex(old_head.hash)))
+                return True
+            old_head = self.get_parent(old_head)
+            new_head = self.get_parent(new_head)
+            if new_head is None or old_head is None:
+                log.info('Revert: new_head or old_head is None')
+                return False
+        log.info('Switch does not revert finalized block!')
+        return False
 
     def reorganize_head_to(self, block):
         log.info('Replacing head')
