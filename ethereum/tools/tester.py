@@ -189,8 +189,15 @@ class Chain(object):
            data=b'', startgas=STARTGAS, gasprice=GASPRICE):
         sender_addr = privtoaddr(sender)
         self.last_sender = sender
-        transaction = Transaction(self.head_state.get_nonce(sender_addr), gasprice, startgas,
-                                  to, value, data).sign(sender)
+        transaction = Transaction(self.head_state.get_nonce(sender_addr), gasprice,
+                                  startgas, to, value, data)
+        # Signs if the transactions isn't a Casper vote
+        casper_contract = to == self.head_state.config['CASPER_ADDRESS']
+        vote = data[0:4] == b'\xe9\xdc\x06\x14'
+        if casper_contract and vote:
+            transaction.nonce = 0
+        else:
+            transaction.sign(sender)
         output = self.direct_tx(transaction)
         return output
 

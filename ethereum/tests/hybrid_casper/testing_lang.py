@@ -1,6 +1,7 @@
 from ethereum.tools import tester
 from ethereum.utils import encode_hex, privtoaddr
 from ethereum.hybrid_casper import casper_utils
+from ethereum.hybrid_casper.config import casper_config
 import re
 
 ALLOC = {a: {'balance': 500*10**24} for a in tester.accounts[:10]}
