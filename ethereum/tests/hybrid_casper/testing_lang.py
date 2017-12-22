@@ -25,7 +25,7 @@ class Validator(object):
         _h, _t, _s = self.get_recommended_casper_msg_contents(casper, validator_index)
         vote = {'index': validator_index, 'hash': _h, 'target': _t, 'source': _s, 'key': self.key}
         vote_msg = self.get_vote_msg(vote)
-        casper.vote(vote_msg, sender=casper_config['NULL_SENDER'])
+        casper.vote(vote_msg)
         # Double vote slash detection
         if _t in self.vote_map and self.vote_map[_t] != vote_msg:
             print('Found double vote for validator:', encode_hex(self.withdrawal_addr))

@@ -123,7 +123,10 @@ def validate_header(state, header):
 def validate_casper_vote_transaction_ordering(state, block):
     reached_casper_vote_transactions = False
     for tx in block.transactions:
-        if tx.to == state.env.config['CASPER_ADDRESS'] and tx.data[0:4] == b'\xe9\xdc\x06\x14':
+        casper_contract = tx.to == state.env.config['CASPER_ADDRESS']
+        vote = tx.data[0:4] == b'\xe9\xdc\x06\x14'
+        null_sender = tx.sender == b'\xff' * 20
+        if casper_contract and vote and null_sender:
             reached_casper_vote_transactions = True
         elif reached_casper_vote_transactions:
             raise InvalidTransaction("Please put all Casper transactions last")
