@@ -198,15 +198,23 @@ class Chain(object):
         apply_block(temp_state, block)
         self.db.put(b'state:' + block.header.hash, temp_state.trie.root_hash)
         # Check the last finalized checkpoint and store
-        casper = tester.ABIContract(tester.State(temp_state), casper_utils.casper_abi, self.config['CASPER_ADDRESS'])
-        if casper.get_last_finalized_epoch() == casper.get_current_epoch() - 1:
-            self.db.put(b'finalized:'+casper.get_checkpoint_hashes(casper.get_last_finalized_epoch()), b'true')
         # ~~~ Add block ~~~~ #
         if self.get_score(self.state, self.head) < self.get_score(temp_state, block) and not self.switch_reverts_finalized_block(self.head, block):
             self.set_head(block)
             log.info('Changed head to: {}'.format(block.number))
+            casper = tester.ABIContract(tester.State(temp_state), casper_utils.casper_abi, self.config['CASPER_ADDRESS'])
+            if casper.get_last_finalized_epoch() == casper.get_current_epoch() - 1:
+                h = casper.get_checkpoint_hashes(casper.get_last_finalized_epoch())
+                if h != b'\x00' * 32:
+                    hist_casper = tester.ABIContract(tester.State(self.mk_poststate_of_blockhash(h)), casper_utils.casper_abi, self.config['CASPER_ADDRESS'])
+                    if hist_casper.get_total_curdyn_deposits() > self.config['NON_REVERT_MIN_DEPOSIT'] and \
+                            hist_casper.get_total_prevdyn_deposits() > self.config['NON_REVERT_MIN_DEPOSIT']:
+                        self.db.put(b'finalized:'+h, b'true')
+                        log.info('Finalized checkpoint {} {}'.format(casper.get_last_finalized_epoch(), encode_hex(h)[:8]))
+                    else:
+                        log.info('Trivially finalized checkpoint {}'.format(casper.get_last_finalized_epoch()))
         else:
-            log.info('Skipping block which is not a descendant of current head checkpoint')
+            log.info('Skipping block {} which is not a descendant of current head checkpoint'.format(block.number))
         # Are there blocks that we received that were waiting for this block?
         # If so, process them.
         if block.header.hash in self.parent_queue:
@@ -222,7 +230,7 @@ class Chain(object):
     def switch_reverts_finalized_block(self, old_head, new_head):
         while old_head.number > new_head.number:
             if b'finalized:'+old_head.hash in self.db:
-                log.info('No revert: old_head hash {} is finalized'.format(encode_hex(old_head.hash)))
+                log.info('[WARNING] Attempt to revert failed: checkpoint {} is finalized'.format(encode_hex(old_head.hash)))
                 return True
             old_head = self.get_parent(old_head)
         while new_head.number > old_head.number:
@@ -232,14 +240,13 @@ class Chain(object):
                 return False
         while new_head.hash != old_head.hash:
             if b'finalized:'+old_head.hash in self.db:
-                log.info('No revert: old_head hash {} is finalized'.format(encode_hex(old_head.hash)))
+                log.info('[WARNING] Attempt to revert failed; checkpoint {} is finalized'.format(encode_hex(old_head.hash)))
                 return True
             old_head = self.get_parent(old_head)
             new_head = self.get_parent(new_head)
             if new_head is None or old_head is None:
                 log.info('Revert: new_head or old_head is None')
                 return False
-        log.info('Switch does not revert finalized block!')
         return False
 
     def reorganize_head_to(self, block):
@@ -401,13 +408,6 @@ class Chain(object):
         if isinstance(block, BlockHeader):
             block = block.hash
         return [self.get_block(h) for h in self.get_child_hashes(block)]
-
-    def get_checkpoint_hash_and_score(self, state):
-        casper = tester.ABIContract(tester.State(state), casper_utils.casper_abi, self.config['CASPER_ADDRESS'])
-        try:
-            return casper.get_recommended_target_hash(), casper.get_main_hash_voted_frac()
-        except tester.TransactionFailed:
-            return None, 0
 
     # Get the score (AKA total difficulty in PoW) of a given block
     def get_pow_difficulty(self, block):

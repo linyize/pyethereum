@@ -91,6 +91,7 @@ class TestLangHybrid(object):
         withdrawal_addr = privtoaddr(tester.keys[number])
         casper_utils.induct_validator(self.t, self.casper, tester.keys[number], self.deposit_size)
         self.validators[number] = Validator(withdrawal_addr, tester.keys[number])
+        print('Joined validator {}'.format(number))
 
     def vote(self, validator_index):
         print('New Vote: CurrDynDeposits: {} - Prev Justified: {} - Prev Finalized: {} - Latest nonvoter rescale: {} - Latest voter rescale {}'.format(

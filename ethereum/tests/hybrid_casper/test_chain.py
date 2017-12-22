@@ -106,7 +106,7 @@ def test_no_gas_cost_for_successful_casper_vote(db):
     """ This tests that the chain is the chain is """
     sender = b'\x82\xa9x\xb3\xf5\x96*[\tW\xd9\xee\x9e\xefG.\xe5[B\xf1'
     test_string = 'B J0 B B'
-    test = TestLangHybrid(15, 100, 0.02, 0.002)
+    test = TestLangHybrid(5, 100, 0.02, 0.002)
     test.parse(test_string)
     pre_balance = test.t.head_state.get_balance(sender)
     pre_block_gas_used = test.t.head_state.gas_used
@@ -120,7 +120,7 @@ def test_no_gas_cost_for_successful_casper_vote(db):
 
 def test_costs_gas_for_failed_casper_vote(db):
     """ This tests that the chain is the chain is """
-    test = TestLangHybrid(15, 100, 0.02, 0.002)
+    test = TestLangHybrid(5, 100, 0.02, 0.002)
     sender = b'\x82\xa9x\xb3\xf5\x96*[\tW\xd9\xee\x9e\xefG.\xe5[B\xf1'
     pre_join_balance = test.t.head_state.get_balance(sender)
     test_string = 'B J0 B B'
@@ -139,7 +139,7 @@ def test_costs_gas_for_failed_casper_vote(db):
 def test_fails_if_all_casper_vote_transactions_are_not_first(db):
     """ This tests that the chain is the chain is """
     test_string = 'B J0 B B J1 V0 B B'
-    test = TestLangHybrid(15, 100, 0.02, 0.002)
+    test = TestLangHybrid(5, 100, 0.02, 0.002)
     with pytest.raises(AssertionError):
         test.parse(test_string)
 
@@ -147,26 +147,33 @@ def test_fails_if_all_casper_vote_transactions_are_not_first(db):
 def test_no_change_for_more_work_on_non_finalized_descendant(db):
     """ This tests that the chain is the chain is """
     test_string = 'B J0 J1 J2 J3 B B V0 V1 V2 V3 B V0 V1 V2 V3 B S0 B B V0 V1 V2 V3 B1 S1 H1 R0 B B B B B B B H1'
-    test = TestLangHybrid(15, 100, 0.02, 0.002)
+    test = TestLangHybrid(5, 100, 0.02, 0.002)
     test.parse(test_string)
 
 
 def test_change_head_for_more_votes(db):
     """ This tests that the chain is the chain is """
     test_string = 'B J0 J1 J2 J3 B B V0 V1 V2 V3 B S0 B V0 V1 V2 B1 S1 R0 B B B2 V0 V1 B1 S2 H1 V2 V3 B2 S3 H3'
-    test = TestLangHybrid(15, 100, 0.02, 0.002)
+    test = TestLangHybrid(5, 100, 0.02, 0.002)
+    test.parse(test_string)
+
+
+def test_that_we_dont_revert_finalized_cp(db):
+    """ This tests that the chain is the chain is """
+    test_string = 'B J0 J1 J2 B B B S0 B V0 V1 V2 B V0 V1 V2 B S1 R0 B B B B B B B B V0 V1 V2 B1 H1'
+    test = TestLangHybrid(5, 100, 0.02, 0.002)
     test.parse(test_string)
 
 
 def test_double_vote_slash(db):
     """ This tests that the chain is the chain is """
     test_string = 'B J0 J1 J2 J3 B B S0 B V0 V1 V2 V3 B1 R0 B V0 B1 X0 B V1 V2 V3 B'
-    test = TestLangHybrid(15, 100, 0.02, 0.002)
+    test = TestLangHybrid(5, 100, 0.02, 0.002)
     test.parse(test_string)
 
 
 def test_vote_surround_slash(db):
     """ This tests that the chain is the chain is """
     test_string = 'B J0 J1 J2 J3 B B S0 V0 V1 V2 V3 B V0 V1 V2 V3 B V0 V1 V2 V3 R0 B B B B B B B V0 B1'
-    test = TestLangHybrid(15, 100, 0.02, 0.002)
+    test = TestLangHybrid(5, 100, 0.02, 0.002)
     test.parse(test_string)
