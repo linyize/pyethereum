@@ -1,5 +1,4 @@
 import pytest
-from ethereum.utils import privtoaddr
 from ethereum.tools import tester
 from ethereum.tests.utils import new_db
 from ethereum.db import EphemDB
@@ -163,7 +162,7 @@ def test_no_change_for_more_work_on_non_finalized_descendant(db):
 def test_change_head_for_more_votes(db):
     """ This tests that the chain is the chain is """
     test_string = 'B J0 J1 J2 J3 B B V0 V1 V2 V3 B S0 B V0 V1 V2 B1 S1 R0 B B B2 V0 V1 B1 S2 H1 V2 V3 B2 S3 H3'
-    test = TestLangHybrid(5, 100, 0.02, 0.002)
+    test = TestLangHybrid(10, 100, 0.02, 0.002)
     test.parse(test_string)
 
 
