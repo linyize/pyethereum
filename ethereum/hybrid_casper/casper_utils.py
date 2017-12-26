@@ -29,7 +29,7 @@ def make_casper_genesis(alloc, epoch_length, withdrawal_delay, base_interest_fac
     config.casper_config['BASE_INTEREST_FACTOR'] = base_interest_factor
     config.casper_config['BASE_PENALTY_FACTOR'] = base_penalty_factor
     # Get initialization txs
-    init_txs, casper_address = mk_initializers(config.casper_config, config.casper_config['NULL_SENDER'])
+    init_txs, casper_address = mk_initializers(config.casper_config, config.casper_config['SENDER'])
     config.casper_config['CASPER_ADDRESS'] = casper_address
     # Create state and apply required state_transitions for initializing Casper
     if genesis_declaration is None:
@@ -38,11 +38,11 @@ def make_casper_genesis(alloc, epoch_length, withdrawal_delay, base_interest_fac
         state = genesis_helpers.state_from_genesis_declaration(genesis_declaration, config.Env(config=config.casper_config))
     state.gas_limit = 10**8
     for tx in init_txs:
-        state.set_balance(utils.privtoaddr(config.casper_config['NULL_SENDER']), 15**18)
+        state.set_balance(utils.privtoaddr(config.casper_config['SENDER']), 15**18)
         success, output = apply_transaction(state, tx)
         assert success
         state.gas_used = 0
-        state.set_balance(utils.privtoaddr(config.casper_config['NULL_SENDER']), 0)
+        state.set_balance(utils.privtoaddr(config.casper_config['SENDER']), 0)
         state.set_balance(casper_address, 10**25)
     consensus.initialize(state)
     state.commit()
