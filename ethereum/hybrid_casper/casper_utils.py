@@ -21,7 +21,7 @@ casper_translator = abi.ContractTranslator(casper_abi)
 purity_translator = abi.ContractTranslator(purity_checker_abi)
 
 # Get a genesis state which is primed for Casper
-def make_casper_genesis(alloc, epoch_length, withdrawal_delay, base_interest_factor, base_penalty_factor, genesis_declaration=None):
+def make_casper_genesis(alloc, epoch_length, withdrawal_delay, base_interest_factor, base_penalty_factor, genesis_declaration=None, db=None):
     # The Casper-specific dynamic config declaration
     config.casper_config['EPOCH_LENGTH'] = epoch_length
     config.casper_config['WITHDRAWAL_DELAY'] = withdrawal_delay
@@ -33,9 +33,9 @@ def make_casper_genesis(alloc, epoch_length, withdrawal_delay, base_interest_fac
     config.casper_config['CASPER_ADDRESS'] = casper_address
     # Create state and apply required state_transitions for initializing Casper
     if genesis_declaration is None:
-        state = genesis_helpers.mk_basic_state(alloc, None, env=config.Env(config=config.casper_config))
+        state = genesis_helpers.mk_basic_state(alloc, None, env=config.Env(config=config.casper_config, db=db))
     else:
-        state = genesis_helpers.state_from_genesis_declaration(genesis_declaration, config.Env(config=config.casper_config))
+        state = genesis_helpers.state_from_genesis_declaration(genesis_declaration, config.Env(config=config.casper_config, db=db))
     state.gas_limit = 10**8
     for tx in init_txs:
         state.set_balance(utils.privtoaddr(config.casper_config['SENDER']), 15**18)

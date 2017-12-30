@@ -43,10 +43,11 @@ class Chain(object):
         elif genesis is None:
             raise Exception("Need genesis decl!")
         elif isinstance(genesis, State):
-            assert env is None
+            assert env is None or env == genesis.env
             self.state = genesis
             self.env = self.state.env
             print('Initializing chain from provided state')
+            reset_genesis = True
         elif "extraData" in genesis:
             self.state = state_from_genesis_declaration(
                 genesis, self.env)
@@ -188,8 +189,6 @@ class Chain(object):
         # Store the block
         self.db.put(block.header.hash, rlp.encode(block))
         self.add_child(block)
-        if block.number % self.config['EPOCH_LENGTH'] == 0:
-            self.db.put(b'cp_subtree_score' + block.hash, 0)
         # Store the state root
         if block.header.prevhash == self.head_hash:
             temp_state = self.state.ephemeral_clone()

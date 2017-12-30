@@ -11,7 +11,8 @@ casper_config = dict(
     EPOCH_LENGTH=50,
     NON_REVERT_MIN_DEPOSIT=10**18,
     SENDER=b'\xff' * 32,
-    OWNER=a0
+    OWNER=a0,
+    MIN_DEPOSIT_SIZE=1500 * 10**18
 )
 
 config.casper_config = {**config.default_config, **casper_config}

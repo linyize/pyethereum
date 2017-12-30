@@ -8,7 +8,7 @@ import copy
 
 default_config = dict(
     # Genesis block difficulty
-    GENESIS_DIFFICULTY=131072,
+    GENESIS_DIFFICULTY=8192,
     # Genesis block gas limit
     GENESIS_GAS_LIMIT=3141592,
     # Genesis block prevhash, coinbase, nonce
@@ -36,8 +36,8 @@ default_config = dict(
     BLOCK_REWARD=5000 * utils.denoms.finney,
     NEPHEW_REWARD=5000 * utils.denoms.finney // 32,  # BLOCK_REWARD / 32
     # In Byzantium
-    BYZANTIUM_BLOCK_REWARD=3000 * utils.denoms.finney,
-    BYZANTIUM_NEPHEW_REWARD=3000 * utils.denoms.finney // 32,  # BLOCK_REWARD / 32
+    BYZANTIUM_BLOCK_REWARD=1000 * utils.denoms.finney,
+    BYZANTIUM_NEPHEW_REWARD=1000 * utils.denoms.finney // 32,  # BLOCK_REWARD / 32
     # GHOST constants
     UNCLE_DEPTH_PENALTY_FACTOR=8,
     MAX_UNCLE_DEPTH=6,  # max (block.number - uncle.number)
@@ -45,7 +45,7 @@ default_config = dict(
     # Difficulty adjustment constants
     DIFF_ADJUSTMENT_CUTOFF=13,
     BLOCK_DIFF_FACTOR=2048,
-    MIN_DIFF=131072,
+    MIN_DIFF=8192,
     # PoW info
     POW_EPOCH_LENGTH=30000,
     # Maximum extra data length
