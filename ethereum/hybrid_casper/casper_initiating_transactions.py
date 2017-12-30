@@ -34,7 +34,8 @@ def mk_initializers(config, sender_privkey, starting_nonce=0):
         nonce += 1
     # Casper initialization transaction
     params = [config["EPOCH_LENGTH"], config["WITHDRAWAL_DELAY"], config["OWNER"], sig_hasher_address,
-              purity_checker_address, config["BASE_INTEREST_FACTOR"], config["BASE_PENALTY_FACTOR"]]
+              purity_checker_address, config["BASE_INTEREST_FACTOR"], config["BASE_PENALTY_FACTOR"],
+              config["MIN_DEPOSIT_SIZE"]]
     # Casper deploy bytecode
     casper_deploy_bytecode = casper_bytecode + casper_ct.encode_constructor_arguments(params)
     casper_deploy_tx = Transaction(nonce, gasprice, 5000000, b'', 0, casper_deploy_bytecode).sign(sender_privkey)
