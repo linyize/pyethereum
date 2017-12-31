@@ -253,7 +253,7 @@ class Chain(object):
         log.info('Replacing head')
         b = block
         new_chain = {}
-        while b.header.number >= int(self.db.get(b'GENESIS_NUMBER')):
+        while b and b.header.number >= int(self.db.get(b'GENESIS_NUMBER')):
             new_chain[b.header.number] = b
             key = b'block:' + to_string(b.header.number)
             orig_at_height = self.db.get(key) if key in self.db else None
@@ -262,7 +262,7 @@ class Chain(object):
             if b.prevhash not in self.db or self.db.get(b.prevhash) == b'GENESIS':
                 break
             b = self.get_parent(b)
-        replace_from = b.header.number
+        replace_from = b.header.number if b else (int(self.db.get(b'GENESIS_NUMBER')) + 1)
         for i in itertools.count(replace_from):
             log.info('Rewriting height %d' % i)
             key = b'block:' + to_string(i)
