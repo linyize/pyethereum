@@ -80,7 +80,6 @@ class Chain(object):
         self.checkpoint_head_score = 0
         self.casper_address = self.config['CASPER_ADDRESS']
         log.info('Casper address: 0x'+encode_hex(self.casper_address))
-        self.db.put(b'GENESIS_NUMBER', to_string(self.state.block_number))
         assert self.state.block_number == self.state.prev_headers[0].number
         if reset_genesis:
             self.genesis = Block(self.state.prev_headers[0], [], [])
