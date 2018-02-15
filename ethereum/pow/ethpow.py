@@ -7,6 +7,7 @@ from collections import OrderedDict
 from ethereum import utils
 from ethereum.slogging import get_logger
 import rlp
+import random
 
 log = get_logger('eth.pow')
 
@@ -80,6 +81,29 @@ def check_pow(block_number, header_hash, mixhash, nonce, difficulty):
         mining_output[b'result']) <= 2**256 // (difficulty or 1)
 
 
+@lru_cache(maxsize=32)
+def check_pow_lowcost(block_number, header_hash, mixhash, nonce, difficulty):
+    """Check if the proof-of-work of the block is valid.
+
+    :param nonce: if given the proof of work function will be evaluated
+                  with this nonce instead of the one already present in
+                  the header
+    :returns: `True` or `False`
+    """
+    log.debug('checking pow', block_number=block_number)
+    if len(mixhash) != 32 or len(header_hash) != 32 or len(nonce) != 8:
+        return False
+
+    # Grab current cache
+    cache = get_cache(block_number)
+    mining_output = hashimoto_light(block_number, cache, header_hash, nonce)
+    if mining_output[b'mix digest'] != mixhash:
+        return False
+    return True
+    #return utils.big_endian_to_int(
+    #    mining_output[b'result']) <= 2**256 // (difficulty or 1)
+
+
 class Miner():
 
     """
@@ -130,3 +154,26 @@ def mine(block_number, difficulty, mining_hash, start_nonce=0, rounds=1000):
             assert len(o[b'mix digest']) == 32
             return bin_nonce, o[b'mix digest']
     return None, None
+
+def mine_lowcost(block_number, difficulty, mining_hash, start_nonce=0, rounds=1000):
+    if random.randint(1, 20) != 11: # 1-20中随机到11才出块
+        return None, None
+
+    assert utils.is_numeric(start_nonce)
+    cache = get_cache(block_number)
+    nonce = start_nonce
+    target = utils.zpad(utils.int_to_big_endian(
+        2**256 // (difficulty or 1) - 1), 32)
+
+    #for i in range(1, rounds + 1):
+    i = random.randint(1, rounds)
+    bin_nonce = utils.zpad(
+        utils.int_to_big_endian(
+            (nonce + i) & TT64M1), 8)
+    o = hashimoto_light(block_number, cache, mining_hash, bin_nonce)
+
+    #if o[b'result'] <= target: # 取消哈希难度
+    log.debug('nonce found: {}'.format(bin_nonce))
+    assert len(bin_nonce) == 8
+    assert len(o[b'mix digest']) == 32
+    return bin_nonce, o[b'mix digest']
