@@ -159,6 +159,9 @@ def mine_lowcost(block_number, difficulty, mining_hash, start_nonce=0, rounds=10
     if random.randint(1, 20) != 11: # 1-20中随机到11才出块
         return None, None
 
+    if rounds < 3:
+        return None, None
+
     assert utils.is_numeric(start_nonce)
     cache = get_cache(block_number)
     nonce = start_nonce
