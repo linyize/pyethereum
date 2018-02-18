@@ -113,9 +113,9 @@ def validate_header(state, header):
             raise ValueError("Timestamp waaaaaaaaaaayy too large")
     if header.gas_limit >= 2**63:
         raise ValueError("Header gas limit too high")
-    if 0 <= header.number - \
-            state.config["DAO_FORK_BLKNUM"] < 10 and header.extra_data != state.config["DAO_FORK_BLKEXTRA"]:
-        raise ValueError("Missing extra data for block near DAO fork")
+    #if 0 <= header.number - \
+    #        state.config["DAO_FORK_BLKNUM"] < 10 and header.extra_data != state.config["DAO_FORK_BLKEXTRA"]:
+    #    raise ValueError("Missing extra data for block near DAO fork")
     return True
 
 

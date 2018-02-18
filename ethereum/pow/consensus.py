@@ -17,12 +17,12 @@ def initialize(state, block=None):
     if block is not None:
         update_block_env_variables(state, block)
 
-    if state.is_DAO(at_fork_height=True):
-        for acct in state.config['CHILD_DAO_LIST']:
-            state.transfer_value(
-                acct,
-                state.config['DAO_WITHDRAWER'],
-                state.get_balance(acct))
+    #if state.is_DAO(at_fork_height=True):
+    #    for acct in state.config['CHILD_DAO_LIST']:
+    #        state.transfer_value(
+    #            acct,
+    #            state.config['DAO_WITHDRAWER'],
+    #            state.get_balance(acct))
 
     # if state.is_METROPOLIS(at_fork_height=True):
     #     state.set_code(utils.normalize_address(
