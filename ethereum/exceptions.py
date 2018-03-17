@@ -32,3 +32,6 @@ class BlockGasLimitReached(InvalidTransaction):
 
 class GasPriceTooLow(InvalidTransaction):
     pass
+
+class InvalidCasperVote(InvalidTransaction):
+    pass

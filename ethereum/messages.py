@@ -21,13 +21,15 @@ from ethereum.specials import specials as default_specials
 from ethereum.config import Env, default_config
 from ethereum.db import BaseDB, EphemDB
 from ethereum.exceptions import InvalidNonce, InsufficientStartGas, UnsignedTransaction, \
-    BlockGasLimitReached, InsufficientBalance, VerificationFailed, InvalidTransaction
+    BlockGasLimitReached, InsufficientBalance, VerificationFailed, InvalidTransaction, \
+    InvalidCasperVote
 import sys
 if sys.version_info.major == 2:
     from repoze.lru import lru_cache
 else:
     from functools import lru_cache
 from ethereum.slogging import get_logger
+
 
 null_address = b'\xff' * 20
 
@@ -193,6 +195,7 @@ def apply_transaction(state, tx):
 
 
 def _apply_casper_vote_transaction(state, tx):
+
     state.logs = []
 
     validate_transaction(state, tx)
@@ -204,9 +207,8 @@ def _apply_casper_vote_transaction(state, tx):
     if tx.sender != null_address:
         state.increment_nonce(tx.sender)
 
-    # buy startgas
-    assert state.get_balance(tx.sender) >= tx.startgas * tx.gasprice
-    state.delta_balance(tx.sender, -tx.startgas * tx.gasprice)
+    # Let's give an upper bound for startgas
+    assert tx.startgas <= 3141592
 
     message_data = vm.CallData([safe_ord(x) for x in tx.data], 0, len(tx.data))
     message = vm.Message(
@@ -227,23 +229,14 @@ def _apply_casper_vote_transaction(state, tx):
 
     log_tx.debug("TX APPLIED", result=result, gas_remained=gas_remained,
                  data=data)
-
-    gas_used = tx.startgas - gas_remained
-
     # Transaction failed
     if not result:
         log_tx.debug('TX FAILED', reason='out of gas',
                      startgas=tx.startgas, gas_remained=gas_remained)
-        state.delta_balance(tx.sender, tx.gasprice * gas_remained)
-        state.delta_balance(state.block_coinbase, tx.gasprice * gas_used)
-        state.gas_used += gas_used
-        output = b''
-        success = 0
+        raise InvalidCasperVote("Failed Casper vote is considered an invalid tx")
     # Transaction success
     else:
         log_tx.debug('TX SUCCESS', data=data)
-        # Refund casper vote if it's succesful
-        state.delta_balance(tx.sender, tx.gasprice * tx.startgas)
         output = bytearray_to_bytestr(data)
         success = 1
 
