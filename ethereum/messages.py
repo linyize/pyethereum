@@ -188,13 +188,18 @@ def apply_transaction(state, tx):
     null_sender = tx.sender == b'\xff' * 20
     if casper_contract and vote and null_sender:
         log_tx.debug("Applying CASPER VOTE transaction: {}".format(tx))
-        return _apply_casper_vote_transaction(state, tx)
+        return _apply_casper_no_gas_transaction(state, tx)
     else:
         log_tx.debug("Applying transaction (non-CASPER VOTE): {}".format(tx))
         return _apply_transaction(state, tx)
 
 
-def _apply_casper_vote_transaction(state, tx):
+def _apply_casper_no_gas_transaction(state, tx):
+    """
+    Success tx: Charge no one
+    Failed tx: Invalid tx
+    Used gas is not added in block
+    """
 
     state.logs = []
 
