@@ -235,7 +235,7 @@ def _apply_casper_vote_transaction(state, tx):
         log_tx.debug('TX FAILED', reason='out of gas',
                      startgas=tx.startgas, gas_remained=gas_remained)
         state.delta_balance(tx.sender, tx.gasprice * gas_remained)
-        state.delta_balance(state.block_coinbase, tx.gasprice * gas_used)
+        #state.delta_balance(state.block_coinbase, tx.gasprice * gas_used)
         state.gas_used += gas_used
         output = b''
         success = 0
@@ -317,7 +317,7 @@ def _apply_transaction(state, tx):
         log_tx.debug('TX FAILED', reason='out of gas',
                      startgas=tx.startgas, gas_remained=gas_remained)
         state.delta_balance(tx.sender, tx.gasprice * gas_remained)
-        state.delta_balance(state.block_coinbase, tx.gasprice * gas_used)
+        #state.delta_balance(state.block_coinbase, tx.gasprice * gas_used)
         output = b''
         success = 0
     # Transaction success
@@ -335,7 +335,7 @@ def _apply_transaction(state, tx):
             state.refunds = 0
         # sell remaining gas
         state.delta_balance(tx.sender, tx.gasprice * gas_remained)
-        state.delta_balance(state.block_coinbase, tx.gasprice * gas_used)
+        #state.delta_balance(state.block_coinbase, tx.gasprice * gas_used)
         if tx.to:
             output = bytearray_to_bytestr(data)
         else:
