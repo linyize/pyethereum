@@ -1,6 +1,6 @@
 from ethereum import utils, transactions
 from ethereum.common import update_block_env_variables
-from ethereum.messages import _apply_casper_no_gas_transaction
+from ethereum.messages import apply_casper_no_gas_transaction
 from ethereum.pow import ethpow
 from ethereum.hybrid_casper import casper_utils
 from ethereum.utils import privtoaddr
@@ -23,8 +23,7 @@ def initialize(state, block=None):
         data = casper_utils.casper_translator.encode('initialize_epoch', [state.block_number // state.config['EPOCH_LENGTH']])
         transaction = transactions.Transaction(state.get_nonce(account), 0, 3141592,
                                                state.config['CASPER_ADDRESS'], 0, data).sign(key)
-        success, output = _apply_casper_no_gas_transaction(state, transaction)
-        assert success
+        apply_casper_no_gas_transaction(state, transaction)
 
     if state.is_DAO(at_fork_height=True):
         for acct in state.config['CHILD_DAO_LIST']:

@@ -21,8 +21,7 @@ from ethereum.specials import specials as default_specials
 from ethereum.config import Env, default_config
 from ethereum.db import BaseDB, EphemDB
 from ethereum.exceptions import InvalidNonce, InsufficientStartGas, UnsignedTransaction, \
-    BlockGasLimitReached, InsufficientBalance, VerificationFailed, InvalidTransaction, \
-    InvalidCasperVote
+    BlockGasLimitReached, InsufficientBalance, VerificationFailed, InvalidTransaction
 import sys
 if sys.version_info.major == 2:
     from repoze.lru import lru_cache
@@ -187,17 +186,18 @@ def apply_transaction(state, tx):
     vote = tx.data[0:4] == b'\xe9\xdc\x06\x14'
     null_sender = tx.sender == b'\xff' * 20
     if casper_contract and vote and null_sender:
-        log_tx.debug("Applying CASPER VOTE transaction: {}".format(tx))
-        return _apply_casper_no_gas_transaction(state, tx)
+        log_tx.debug("Applying CASPER no gas transaction: {}".format(tx))
+        success, output = apply_casper_no_gas_transaction(state, tx)
+        assert success, "CASPER no gas transaction should always success"
+        return success, output
     else:
         log_tx.debug("Applying transaction (non-CASPER VOTE): {}".format(tx))
-        return _apply_transaction(state, tx)
+        return apply_regular_transaction(state, tx)
 
 
-def _apply_casper_no_gas_transaction(state, tx):
+def apply_casper_no_gas_transaction(state, tx):
     """
     Success tx: Charge no one
-    Failed tx: Invalid tx
     Used gas is not added in block
     """
 
@@ -238,7 +238,8 @@ def _apply_casper_no_gas_transaction(state, tx):
     if not result:
         log_tx.debug('TX FAILED', reason='out of gas',
                      startgas=tx.startgas, gas_remained=gas_remained)
-        raise InvalidCasperVote("Failed Casper vote is considered an invalid tx")
+        output = b''
+        success = 0
     # Transaction success
     else:
         log_tx.debug('TX SUCCESS', data=data)
@@ -260,7 +261,7 @@ def _apply_casper_no_gas_transaction(state, tx):
     return success, output
 
 
-def _apply_transaction(state, tx):
+def apply_regular_transaction(state, tx):
     state.logs = []
     state.suicides = []
     state.refunds = 0

@@ -5,7 +5,8 @@ from ethereum.db import EphemDB
 from ethereum.hybrid_casper import casper_utils
 from ethereum.slogging import get_logger
 from ethereum.tests.hybrid_casper.testing_lang import TestLangHybrid
-from ethereum.exceptions import InvalidCasperVote
+
+
 log = get_logger('test.chain')
 logger = get_logger()
 
@@ -128,10 +129,10 @@ def test_invalid_tx_for_failed_casper_vote(db):
     """ This tests that the chain is the chain is """
     test_string = 'B J0 B B'
     test = TestLangHybrid(5, 100, 0.02, 0.002)
-    sender = b'\x82\xa9x\xb3\xf5\x96*[\tW\xd9\xee\x9e\xefG.\xe5[B\xf1'
+    test.parse(test_string)
 
     # sending invalid vote
-    with pytest.raises(InvalidCasperVote):
+    with pytest.raises(AssertionError):
         test.t.tx(to=test.t.chain.config['CASPER_ADDRESS'], value=0,
             data=b'\xe9\xdc\x06\x14', startgas=1000000, gasprice=0)
 

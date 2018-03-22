@@ -6,8 +6,7 @@ from ethereum.utils import sha3, encode_hex
 import rlp
 from ethereum.slogging import get_logger
 from ethereum.exceptions import InsufficientBalance, BlockGasLimitReached, \
-    InsufficientStartGas, InvalidNonce, UnsignedTransaction, InvalidTransaction, \
-    InvalidCasperVote
+    InsufficientStartGas, InvalidNonce, UnsignedTransaction, InvalidTransaction
 from ethereum.messages import apply_transaction
 log = get_logger('eth.block')
 
@@ -157,7 +156,7 @@ def add_transactions(state, block, txqueue, min_gasprice=0):
             apply_transaction(state, tx)
             block.transactions.append(tx)
         except (InsufficientBalance, BlockGasLimitReached, InsufficientStartGas,
-                InvalidNonce, UnsignedTransaction, InvalidCasperVote) as e:
+                InvalidNonce, UnsignedTransaction) as e:
             log.error(e)
     log.info('Added %d transactions' % (len(block.transactions) - pre_txs))
 
