@@ -212,9 +212,6 @@ def apply_casper_no_gas_transaction(state, tx):
     if tx.sender != null_address:
         state.increment_nonce(tx.sender)
 
-    # Let's give an upper bound for startgas
-    assert tx.startgas <= 3141592
-
     message_data = vm.CallData([safe_ord(x) for x in tx.data], 0, len(tx.data))
     message = vm.Message(
         tx.sender,
