@@ -136,6 +136,18 @@ def test_invalid_tx_for_failed_casper_vote(db):
         test.t.tx(to=test.t.chain.config['CASPER_ADDRESS'], value=0,
             data=b'\xe9\xdc\x06\x14', startgas=1000000, gasprice=0)
 
+def test_no_gas_cost_for_epoch_initialization(db):
+    """ This tests that the chain is the chain is """
+    test_string = 'B J0 B B V0 B2'
+    test = TestLangHybrid(5, 100, 0.02, 0.002)
+    test.parse(test_string)
+
+    assert test.casper.get_current_epoch() == 3
+    test.t.mine(1)
+    assert test.t.chain.head.number == 19
+    assert test.casper.get_current_epoch() == 4
+    assert test.t.chain.get_block_by_number(19).gas_used == 0
+
 
 def test_fails_if_all_casper_vote_transactions_are_not_last(db):
     """ This tests that the chain is the chain is """
