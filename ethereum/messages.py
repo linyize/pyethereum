@@ -187,9 +187,7 @@ def apply_transaction(state, tx):
     null_sender = tx.sender == b'\xff' * 20
     if casper_contract and vote and null_sender:
         log_tx.debug("Applying CASPER no gas transaction: {}".format(tx))
-        success, output = apply_casper_no_gas_transaction(state, tx)
-        assert success, "CASPER no gas transaction should always success"
-        return success, output
+        return apply_casper_no_gas_transaction(state, tx)
     else:
         log_tx.debug("Applying transaction (non-CASPER VOTE): {}".format(tx))
         return apply_regular_transaction(state, tx)
@@ -206,7 +204,7 @@ def apply_casper_no_gas_transaction(state, tx):
     validate_transaction(state, tx)
 
     intrinsic_gas = tx.intrinsic_gas_used
-    log_tx.debug('TX NEW', txdict=tx.to_dict())
+    log_tx.debug('TX NEW (Casper)', txdict=tx.to_dict())
 
     # start transacting #################
     if tx.sender != null_address:
@@ -235,8 +233,8 @@ def apply_casper_no_gas_transaction(state, tx):
     if not result:
         log_tx.debug('TX FAILED', reason='out of gas',
                      startgas=tx.startgas, gas_remained=gas_remained)
-        output = b''
-        success = 0
+        assert False, "CASPER no gas transaction should always success"
+
     # Transaction success
     else:
         log_tx.debug('TX SUCCESS', data=data)
