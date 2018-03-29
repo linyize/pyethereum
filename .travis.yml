@@ -8,8 +8,6 @@ git:
 
 before_install:
   - git submodule update --init casper
-  - git clone https://github.com/ethereum/vyper.git
-  - cd vyper && git reset --hard 9be3ac1945ab98c932ec769274965e9bb0536bb2 && python setup.py develop && cd ..
   - pip install -r requirements.txt
 
 script:
