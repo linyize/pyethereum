@@ -29,6 +29,7 @@ else:
     from functools import lru_cache
 from ethereum.slogging import get_logger
 
+
 null_address = b'\xff' * 20
 
 log = get_logger('eth.block')
@@ -185,28 +186,29 @@ def apply_transaction(state, tx):
     vote = tx.data[0:4] == b'\xe9\xdc\x06\x14'
     null_sender = tx.sender == b'\xff' * 20
     if casper_contract and vote and null_sender:
-        log_tx.debug("Applying CASPER VOTE transaction: {}".format(tx))
-        return _apply_casper_vote_transaction(state, tx)
+        log_tx.debug("Applying CASPER no gas transaction: {}".format(tx))
+        return apply_casper_no_gas_transaction(state, tx)
     else:
         log_tx.debug("Applying transaction (non-CASPER VOTE): {}".format(tx))
-        return _apply_transaction(state, tx)
+        return apply_regular_transaction(state, tx)
 
 
-def _apply_casper_vote_transaction(state, tx):
+def apply_casper_no_gas_transaction(state, tx):
+    """
+    Success tx: Charge no one
+    Used gas is not added in block
+    """
+
     state.logs = []
 
     validate_transaction(state, tx)
 
     intrinsic_gas = tx.intrinsic_gas_used
-    log_tx.debug('TX NEW', txdict=tx.to_dict())
+    log_tx.debug('TX NEW (Casper)', txdict=tx.to_dict())
 
     # start transacting #################
     if tx.sender != null_address:
         state.increment_nonce(tx.sender)
-
-    # buy startgas
-    assert state.get_balance(tx.sender) >= tx.startgas * tx.gasprice
-    state.delta_balance(tx.sender, -tx.startgas * tx.gasprice)
 
     message_data = vm.CallData([safe_ord(x) for x in tx.data], 0, len(tx.data))
     message = vm.Message(
@@ -227,23 +229,15 @@ def _apply_casper_vote_transaction(state, tx):
 
     log_tx.debug("TX APPLIED", result=result, gas_remained=gas_remained,
                  data=data)
-
-    gas_used = tx.startgas - gas_remained
-
     # Transaction failed
     if not result:
         log_tx.debug('TX FAILED', reason='out of gas',
                      startgas=tx.startgas, gas_remained=gas_remained)
-        state.delta_balance(tx.sender, tx.gasprice * gas_remained)
-        state.delta_balance(state.block_coinbase, tx.gasprice * gas_used)
-        state.gas_used += gas_used
-        output = b''
-        success = 0
+        assert False, "CASPER no gas transaction should always success"
+
     # Transaction success
     else:
         log_tx.debug('TX SUCCESS', data=data)
-        # Refund casper vote if it's succesful
-        state.delta_balance(tx.sender, tx.gasprice * tx.startgas)
         output = bytearray_to_bytestr(data)
         success = 1
 
@@ -262,7 +256,7 @@ def _apply_casper_vote_transaction(state, tx):
     return success, output
 
 
-def _apply_transaction(state, tx):
+def apply_regular_transaction(state, tx):
     state.logs = []
     state.suicides = []
     state.refunds = 0

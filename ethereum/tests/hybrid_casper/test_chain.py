@@ -5,6 +5,8 @@ from ethereum.db import EphemDB
 from ethereum.hybrid_casper import casper_utils
 from ethereum.slogging import get_logger
 from ethereum.tests.hybrid_casper.testing_lang import TestLangHybrid
+
+
 log = get_logger('test.chain')
 logger = get_logger()
 
@@ -123,25 +125,28 @@ def test_no_gas_cost_for_successful_casper_vote(db):
     assert pre_coinbase_balance < post_coinbase_balance
 
 
-def test_costs_gas_for_failed_casper_vote(db):
+def test_invalid_tx_for_failed_casper_vote(db):
     """ This tests that the chain is the chain is """
-    test = TestLangHybrid(5, 100, 0.02, 0.002)
-    sender = b'\x82\xa9x\xb3\xf5\x96*[\tW\xd9\xee\x9e\xefG.\xe5[B\xf1'
-    pre_join_balance = test.t.head_state.get_balance(sender)
     test_string = 'B J0 B B'
+    test = TestLangHybrid(5, 100, 0.02, 0.002)
     test.parse(test_string)
-    post_join_balance = test.t.head_state.get_balance(sender)
-    cost_of_joining = pre_join_balance - post_join_balance
-    pre_balance = test.t.head_state.get_balance(sender)
-    pre_block_gas_used = test.t.head_state.gas_used
-    test_string = 'V0 J1 B B'
+
+    # sending invalid vote
     with pytest.raises(AssertionError):
-        test.parse(test_string)
-    post_balance = test.t.head_state.get_balance(sender)
-    post_block_gas_used = test.t.head_state.gas_used
-    # Gas is charged for failed vote
-    assert pre_balance > post_balance + cost_of_joining
-    assert pre_block_gas_used < post_block_gas_used
+        test.t.tx(to=test.t.chain.config['CASPER_ADDRESS'], value=0,
+            data=b'\xe9\xdc\x06\x14', startgas=1000000, gasprice=0)
+
+def test_no_gas_cost_for_epoch_initialization(db):
+    """ This tests that the chain is the chain is """
+    test_string = 'B J0 B B V0 B2'
+    test = TestLangHybrid(5, 100, 0.02, 0.002)
+    test.parse(test_string)
+
+    assert test.casper.get_current_epoch() == 3
+    test.t.mine(1)
+    assert test.t.chain.head.number == 19
+    assert test.casper.get_current_epoch() == 4
+    assert test.t.chain.get_block_by_number(19).gas_used == 0
 
 
 def test_fails_if_all_casper_vote_transactions_are_not_last(db):
