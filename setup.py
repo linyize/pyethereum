@@ -14,7 +14,7 @@ install_requires = [
         r, r) for r in install_requires]
 
 # dev requirements
-tests_require = set(x.strip() for x in open('dev_requirements.txt'))
+tests_require = list(set(x.strip() for x in open('dev_requirements.txt')))
 
 # dependency links
 dependency_links = []
