@@ -202,16 +202,16 @@ class Chain(object):
             self.set_head(block)
             log.info('Changed head to: {}'.format(block.number))
             casper = tester.ABIContract(tester.State(temp_state), casper_utils.casper_abi, self.config['CASPER_ADDRESS'])
-            if casper.get_last_finalized_epoch() == casper.get_current_epoch() - 1:
-                h = casper.get_checkpoint_hashes(casper.get_last_finalized_epoch())
+            if casper.last_finalized_epoch() == casper.current_epoch() - 1:
+                h = casper.checkpoint_hashes(casper.last_finalized_epoch())
                 if h != b'\x00' * 32:
                     hist_casper = tester.ABIContract(tester.State(self.mk_poststate_of_blockhash(h)), casper_utils.casper_abi, self.config['CASPER_ADDRESS'])
                     if hist_casper.get_total_curdyn_deposits() > self.config['NON_REVERT_MIN_DEPOSIT'] and \
                             hist_casper.get_total_prevdyn_deposits() > self.config['NON_REVERT_MIN_DEPOSIT']:
                         self.db.put(b'finalized:'+h, b'true')
-                        log.info('Finalized checkpoint {} {}'.format(casper.get_last_finalized_epoch(), encode_hex(h)[:8]))
+                        log.info('Finalized checkpoint {} {}'.format(casper.last_finalized_epoch(), encode_hex(h)[:8]))
                     else:
-                        log.info('Trivially finalized checkpoint {}'.format(casper.get_last_finalized_epoch()))
+                        log.info('Trivially finalized checkpoint {}'.format(casper.last_finalized_epoch()))
         else:
             log.info('Skipping block {} which is not a descendant of current head checkpoint'.format(block.number))
         # Are there blocks that we received that were waiting for this block?
@@ -224,7 +224,7 @@ class Chain(object):
 
     def get_score(self, prestate, block):
         casper = tester.ABIContract(tester.State(prestate), casper_utils.casper_abi, self.config['CASPER_ADDRESS'])
-        return casper.get_last_justified_epoch() * 10**40 + self.get_pow_difficulty(block)
+        return casper.last_justified_epoch() * 10**40 + self.get_pow_difficulty(block)
 
     def switch_reverts_finalized_block(self, old_head, new_head):
         while old_head.number > new_head.number:

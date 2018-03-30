@@ -9,4 +9,4 @@ https://github.com/ethereum/ethash/tarball/master
 pycryptodome==3.4.6
 coincurve>=5.0.1
 future
-git+https://github.com/ethereum/vyper.git@9be3ac1945ab98c932ec769274965e9bb0536bb2
+git+https://github.com/ethereum/vyper.git@v0.0.4

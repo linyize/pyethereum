@@ -8,8 +8,8 @@ from ethereum.hybrid_casper import consensus
 from ethereum.hybrid_casper.config import config
 from ethereum.messages import apply_transaction
 from ethereum.tools.tester import a0
-from viper import compiler, optimizer, compile_lll
-from viper.parser.parser_utils import LLLnode
+from vyper import compiler, optimizer, compile_lll
+from vyper.parser.parser_utils import LLLnode
 import rlp
 
 ethereum_path = os.path.dirname(sys.modules['ethereum'].__file__)

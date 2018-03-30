@@ -68,8 +68,8 @@ class Validator(object):
 
     def get_recommended_casper_msg_contents(self, casper, validator_index):
         return \
-            casper.get_recommended_target_hash(), casper.get_current_epoch(), \
-            casper.get_recommended_source_epoch()
+            casper.recommended_target_hash(), casper.current_epoch(), \
+            casper.recommended_source_epoch()
 
     def get_validator_index(self, state):
         t = tester.State(state.ephemeral_clone())
@@ -78,7 +78,7 @@ class Validator(object):
         if self.valcode_addr is None:
             raise Exception('Valcode address not set')
         try:
-            return casper.get_validator_indexes(self.coinbase)
+            return casper.validator_indexes(self.coinbase)
         except tester.TransactionFailed:
             return None
 
@@ -140,7 +140,7 @@ class Validator(object):
         except tester.TransactionFailed:
             log.info('Vote failed! Validator {} - validator start {} - valcode addr {}'
                      .format(self.get_validator_index(state),
-                             casper.get_validators__start_dynasty(validator_index),
+                             casper.validators__start_dynasty(validator_index),
                              utils.encode_hex(self.valcode_addr)))
             return None
         # Save the vote message we generated
