@@ -38,7 +38,7 @@ def mk_test(b, e, m, execgas):
     encoded = mk_modexp_data(b, e, m)
     s = c.snapshot()
     x = c.contract(kode % (len(encoded) + 36, max(intlen(m), 1),
-                           max(intlen(m), 1)), language='viper')
+                           max(intlen(m), 1)), language='vyper')
     pre = tester.mk_state_test_prefill(c)
     try:
         o = x.foo(

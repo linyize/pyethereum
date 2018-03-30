@@ -19,7 +19,7 @@ def foo(x: bytes <= 1920) -> bytes <= 32:
     return o
 """
 
-x1 = c.contract(kode, language='viper')
+x1 = c.contract(kode, language='vyper')
 
 # Generate a point on the G2 curve, but not in the correct subgroup
 fake_point = None
