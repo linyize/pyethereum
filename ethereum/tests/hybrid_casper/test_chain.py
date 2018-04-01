@@ -142,10 +142,10 @@ def test_no_gas_cost_for_epoch_initialization(db):
     test = TestLangHybrid(5, 100, 2, 0.02, 0.002)
     test.parse(test_string)
 
-    assert test.casper.get_current_epoch() == 3
+    assert test.casper.current_epoch() == 3
     test.t.mine(1)
     assert test.t.chain.head.number == 19
-    assert test.casper.get_current_epoch() == 4
+    assert test.casper.current_epoch() == 4
     assert test.t.chain.get_block_by_number(19).gas_used == 0
 
 
