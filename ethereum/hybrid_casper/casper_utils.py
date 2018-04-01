@@ -21,10 +21,12 @@ casper_translator = abi.ContractTranslator(casper_abi)
 purity_translator = abi.ContractTranslator(purity_checker_abi)
 
 # Get a genesis state which is primed for Casper
-def make_casper_genesis(alloc, epoch_length, withdrawal_delay, base_interest_factor, base_penalty_factor, genesis_declaration=None, db=None):
+def make_casper_genesis(alloc, epoch_length, withdrawal_delay, dynasty_logout_delay,
+    base_interest_factor, base_penalty_factor, genesis_declaration=None, db=None):
     # The Casper-specific dynamic config declaration
     config.casper_config['EPOCH_LENGTH'] = epoch_length
     config.casper_config['WITHDRAWAL_DELAY'] = withdrawal_delay
+    config.casper_config['DYNASTY_LOGOUT_DELAY'] = dynasty_logout_delay
     config.casper_config['OWNER'] = a0
     config.casper_config['BASE_INTEREST_FACTOR'] = base_interest_factor
     config.casper_config['BASE_PENALTY_FACTOR'] = base_penalty_factor
