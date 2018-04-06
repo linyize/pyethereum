@@ -156,10 +156,7 @@ def mine(block_number, difficulty, mining_hash, start_nonce=0, rounds=1000):
     return None, None
 
 def mine_lowcost(block_number, difficulty, mining_hash, start_nonce=0, rounds=1000):
-    if random.randint(1, 20) != 11: # 1-20中随机到11才出块
-        return None, None
-
-    if rounds < 3:
+    if random.randint(1, 5) != 3: # 1-10中随机到5才出块
         return None, None
 
     assert utils.is_numeric(start_nonce)
