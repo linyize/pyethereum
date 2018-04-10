@@ -35,6 +35,16 @@ def initialize(state, block=None):
 def check_pow(state, header):
     assert ethpow.check_pow_lowcost(header.number, header.mining_hash, header.mixhash,
                             header.nonce, header.difficulty)
+
+    if state.is_IMO():
+        # coinbase拥有的ether少于设定值时，不允许出块
+        miner_balance = state.get_balance(header.coinbase)/10**18
+        if miner_balance < state.config['IMO_FORK_MIN_MINER_BALANCE']:
+            print('+++++++++++++++++++++++++++++++ miner balance < IMO_FORK_MIN_MINER_BALANCE:' + utils.encode_hex(header.coinbase) + ' ether:' + str(miner_balance))
+            print('+++++++++++++++++++++++++++++++ IMO_FORK_MIN_MINER_BALANCE:' + str(state.config['IMO_FORK_MIN_MINER_BALANCE']))
+            return False
+        # m个块以内同一个coinbase，不能重复出块
+
     return True
 
 

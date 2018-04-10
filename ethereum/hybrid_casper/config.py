@@ -12,7 +12,15 @@ casper_config = dict(
     NON_REVERT_MIN_DEPOSIT=10**18,
     SENDER=b'\xff' * 32,
     OWNER=a0,
-    MIN_DEPOSIT_SIZE=1500 * 10**18
+    MIN_DEPOSIT_SIZE=1500 * 10**18,
+
+    # IMO fork
+    IMO_FORK_BLKNUM=100,
+    IMO_FORK_MIN_MINER_BALANCE=1000,
+    IMO_FORK_BLKLENGTH=10,
+    HOMESTEAD_FORK_BLKNUM=0,
+    SPURIOUS_DRAGON_FORK_BLKNUM=0,
+    DAO_FORK_BLKNUM=0,
 )
 
 config.casper_config = {**config.default_config, **casper_config}

@@ -331,6 +331,13 @@ class State():
         else:
             return self.block_number >= self.config['DAO_FORK_BLKNUM']
 
+    # hard_chain: 特别的共识机制
+    def is_IMO(self, at_fork_height=False):
+        if at_fork_height:
+            return self.block_number == self.config['IMO_FORK_BLKNUM']
+        else:
+            return self.block_number >= self.config['IMO_FORK_BLKNUM']
+
     def account_exists(self, address):
         if self.is_SPURIOUS_DRAGON():
             o = not self.get_and_cache_account(
