@@ -43,7 +43,17 @@ def check_pow(state, header):
             print('+++++++++++++++++++++++++++++++ miner balance < IMO_FORK_MIN_MINER_BALANCE:' + utils.encode_hex(header.coinbase) + ' ether:' + str(miner_balance))
             print('+++++++++++++++++++++++++++++++ IMO_FORK_MIN_MINER_BALANCE:' + str(state.config['IMO_FORK_MIN_MINER_BALANCE']))
             return False
+
         # m个块以内同一个coinbase，不能重复出块
+        norepeat = state.config['IMO_FORK_BLK_NOTREPEAT']
+        prevheadercount = 1
+        for prev_header in state.prev_headers:
+            if prev_header.coinbase == header.coinbase:
+                print('+++++++++++++++++++++++++++++++ IMO_FORK_BLK_NOTREPEAT:' + utils.encode_hex(header.coinbase))
+                return False
+            prevheadercount += 1
+            if prevheadercount >= norepeat:
+                break
 
     return True
 
