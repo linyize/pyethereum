@@ -35,7 +35,10 @@ def initialize(state, block=None):
 def check_pow(state, header):
     assert ethpow.check_pow_lowcost(header.number, header.mining_hash, header.mixhash,
                             header.nonce, header.difficulty)
+    assert check_imo(state, header)
+    return True
 
+def check_imo(state, header):
     if state.is_IMO():
         # coinbase拥有的ether少于设定值时，不允许出块
         miner_balance = state.get_balance(header.coinbase)/10**18
@@ -54,9 +57,7 @@ def check_pow(state, header):
             prevheadercount += 1
             if prevheadercount >= norepeat:
                 break
-
     return True
-
 
 # Get uncle blocks to add to a block on the given state
 def get_uncle_candidates(chain, state):
