@@ -14,7 +14,7 @@ install_requires = [
         r, r) for r in install_requires]
 
 # dev requirements
-#tests_require = set(x.strip() for x in open('dev_requirements.txt'))
+tests_require = list(set(x.strip() for x in open('dev_requirements.txt')))
 
 # dependency links
 dependency_links = []
@@ -31,7 +31,7 @@ setup(
     long_description=readme,
     url='https://github.com/ethereum/pyethereum/',
     install_requires=install_requires,
-    #tests_require=tests_require,
+    tests_require=tests_require,
     dependency_links=dependency_links,
     setup_requires=[
         #    'pytest-runner==2.7'

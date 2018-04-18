@@ -15,7 +15,7 @@ class Validator(object):
         self.surrounding_vote_evidence = []
 
     def get_recommended_casper_msg_contents(self, casper, validator_index):
-        return casper.get_recommended_target_hash(), casper.get_current_epoch(), casper.get_recommended_source_epoch()
+        return casper.recommended_target_hash(), casper.current_epoch(), casper.recommended_source_epoch()
 
     def get_vote_msg(self, vote):
         return casper_utils.mk_vote(vote['index'], vote['hash'], vote['target'], vote['source'], vote['key'])
@@ -55,14 +55,16 @@ class Validator(object):
         if self.withdrawal_addr is None:
             raise Exception('Valcode address not set')
         try:
-            return casper.get_validator_indexes(self.withdrawal_addr)
+            return casper.validator_indexes(self.withdrawal_addr)
         except tester.TransactionFailed:
             return None
 
 class TestLangHybrid(object):
     # For a custom Casper parser, overload generic parser and construct your chain
-    def __init__(self, epoch_length, withdrawal_delay, base_interest_factor, base_penalty_factor, deposit_size=2000 * 10**18):
-        self.genesis = casper_utils.make_casper_genesis(ALLOC, epoch_length, withdrawal_delay, base_interest_factor, base_penalty_factor)
+    def __init__(self, epoch_length, withdrawal_delay, dynasty_logout_delay,
+        base_interest_factor, base_penalty_factor, deposit_size=2000 * 10**18):
+        self.genesis = casper_utils.make_casper_genesis(ALLOC, epoch_length, withdrawal_delay, dynasty_logout_delay,
+            base_interest_factor, base_penalty_factor)
         self.t = tester.Chain(genesis=self.genesis)
         self.casper = tester.ABIContract(self.t, casper_utils.casper_abi, self.t.chain.env.config['CASPER_ADDRESS'])
         self.saved_blocks = dict()
@@ -82,8 +84,8 @@ class TestLangHybrid(object):
         if number == '':
             print ("No number of blocks specified, Mining 1 epoch to curr HEAD")
             self.mine_epochs(number_of_epochs=1)
-            print('Epoch: {}'.format(self.casper.get_current_epoch()))
-            print('Dynasty: {}'.format(self.casper.get_dynasty_in_epoch(self.casper.get_current_epoch())))
+            print('Epoch: {}'.format(self.casper.current_epoch()))
+            print('Dynasty: {}'.format(self.casper.dynasty_in_epoch(self.casper.current_epoch())))
         else:
             print ("Mining " + str(number) + " blocks to curr HEAD")
             self.t.mine(number)
@@ -96,10 +98,10 @@ class TestLangHybrid(object):
 
     def vote(self, validator_index):
         print('New Vote: CurrDynDeposits: {} - Prev Justified: {} - Prev Finalized: {} - Latest nonvoter rescale: {} - Latest voter rescale {}'.format(
-            self.casper.get_total_curdyn_deposits(), self.casper.get_recommended_source_epoch(),
-            self.casper.get_last_finalized_epoch(), self.casper.get_last_nonvoter_rescale(), self.casper.get_last_voter_rescale()))
+            self.casper.get_total_curdyn_deposits(), self.casper.recommended_source_epoch(),
+            self.casper.last_finalized_epoch(), self.casper.last_nonvoter_rescale(), self.casper.last_voter_rescale()))
         if self.casper.get_total_curdyn_deposits() > 0 and self.casper.get_total_prevdyn_deposits() > 0:
-            print('Vote frac: {}'.format(self.casper.get_main_hash_voted_frac()))
+            print('Vote frac: {}'.format(self.casper.main_hash_voted_frac()))
         self.validators[validator_index].vote(self.casper)
 
     def slash(self, validator_index):

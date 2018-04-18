@@ -44,8 +44,8 @@ if _solidity:
     languages['solidity'] = _solidity
 
 try:
-    from viper import compiler
-    languages['viper'] = compiler
+    from vyper import compiler
+    languages['vyper'] = compiler
 except (ImportError, TypeError):
     pass
 

@@ -17,7 +17,7 @@ def foo(x: bytes <= 192) -> bytes <= 64:
     return o
 """
 
-x1 = c.contract(kode, language='viper')
+x1 = c.contract(kode, language='vyper')
 
 
 def mk_ecmul_data(p1, m):

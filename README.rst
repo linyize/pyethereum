@@ -260,7 +260,7 @@ Creates encrypted private key storaes
 ethereum.abi
 ~~~~~~~~~~~~
 
-Most compilers for HLLs (solidity, serpent, viper, etc) on top of
+Most compilers for HLLs (solidity, serpent, vyper, etc) on top of
 Ethereum have the option to output an ABI declaration for a program.
 This is a json object that looks something like this:
 
