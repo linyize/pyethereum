@@ -99,9 +99,9 @@ def check_pow_lowcost(block_number, header_hash, mixhash, nonce, difficulty):
     mining_output = hashimoto_light(block_number, cache, header_hash, nonce)
     if mining_output[b'mix digest'] != mixhash:
         return False
-    #return True
-    return utils.big_endian_to_int(
-        mining_output[b'result']) <= 2**256 // (difficulty or 1)
+    return True
+    #return utils.big_endian_to_int(
+    #    mining_output[b'result']) <= 2**256 // (difficulty or 1)
 
 
 class Miner():
@@ -156,8 +156,8 @@ def mine(block_number, difficulty, mining_hash, start_nonce=0, rounds=1000):
     return None, None
 
 def mine_lowcost(block_number, difficulty, mining_hash, start_nonce=0, rounds=1000):
-    #if random.randint(1, 5) != 3: # 1-10中随机到5才出块
-    #    return None, None
+    if random.randint(1, 5) != 3: # 1-10中随机到5才出块
+        return None, None
 
     assert utils.is_numeric(start_nonce)
     cache = get_cache(block_number)
@@ -165,16 +165,15 @@ def mine_lowcost(block_number, difficulty, mining_hash, start_nonce=0, rounds=10
     target = utils.zpad(utils.int_to_big_endian(
         2**256 // (difficulty or 1) - 1), 32)
 
-    for i in range(1, rounds + 1):
-        i = random.randint(1, rounds)
-        bin_nonce = utils.zpad(
-            utils.int_to_big_endian(
-                (nonce + i) & TT64M1), 8)
-        o = hashimoto_light(block_number, cache, mining_hash, bin_nonce)
+    #for i in range(1, rounds + 1):
+    i = random.randint(1, rounds)
+    bin_nonce = utils.zpad(
+        utils.int_to_big_endian(
+            (nonce + i) & TT64M1), 8)
+    o = hashimoto_light(block_number, cache, mining_hash, bin_nonce)
 
-        if o[b'result'] <= target: # 取消哈希难度
-            log.debug('nonce found: {}'.format(bin_nonce))
-            assert len(bin_nonce) == 8
-            assert len(o[b'mix digest']) == 32
-            return bin_nonce, o[b'mix digest']
-    return None, None
+    #if o[b'result'] <= target: # 取消哈希难度
+    log.debug('nonce found: {}'.format(bin_nonce))
+    assert len(bin_nonce) == 8
+    assert len(o[b'mix digest']) == 32
+    return bin_nonce, o[b'mix digest']
