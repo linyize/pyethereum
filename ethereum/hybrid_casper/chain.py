@@ -116,14 +116,14 @@ class Chain(object):
         while i < len(self.time_queue) and self.time_queue[i].timestamp <= self.localtime:
             log.info('Adding scheduled block')
             pre_len = len(self.time_queue)
-            self.add_block(self.time_queue.pop(i))
+            self.add_block(self.time_queue.pop(i)) # 问题：如果是自己挖的块，这边并没有触发广播，结果其他节点都不知道有这个块
             if len(self.time_queue) == pre_len:
                 i += 1
 
-    def should_add_block(self, block):
+    def should_add_block(self, block, isMine=False):
         # Check that the block wasn't recieved too early
         now = self.localtime
-        if block.header.timestamp > now:
+        if block.header.timestamp > now and isMine == False:
             i = 0
             while i < len(self.time_queue) and block.timestamp > self.time_queue[i].timestamp:
                 i += 1
@@ -180,10 +180,10 @@ class Chain(object):
         return True
 
     # Call upon receiving a block
-    def add_block(self, block):
+    def add_block(self, block, isMine=False):
         # ~~~ Validate ~~~~ #
         # Validate that the block should be added
-        if not self.should_add_block(block):
+        if not self.should_add_block(block, isMine):
             return False
         # ~~~ Store ~~~~ #
         # Store the block
