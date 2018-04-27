@@ -185,6 +185,9 @@ class Chain(object):
         # Validate that the block should be added
         if not self.should_add_block(block, isMine):
             return False
+
+        log.info('add_block: {}'.format(block.number))
+        
         # ~~~ Store ~~~~ #
         # Store the block
         self.db.put(block.header.hash, rlp.encode(block))
