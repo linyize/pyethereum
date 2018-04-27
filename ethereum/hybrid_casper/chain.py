@@ -187,7 +187,7 @@ class Chain(object):
             return False
 
         log.info('add_block: {}'.format(block.number))
-        
+
         # ~~~ Store ~~~~ #
         # Store the block
         self.db.put(block.header.hash, rlp.encode(block))
@@ -201,6 +201,12 @@ class Chain(object):
         self.db.put(b'state:' + block.header.hash, temp_state.trie.root_hash)
         # Check the last finalized checkpoint and store
         # ~~~ Add block ~~~~ #
+        oldheadscore = self.get_score(self.state, self.head)
+        newheadscore = self.get_score(temp_state, block)
+
+        log.info('oldheadscore: {}'.format(oldheadscore))
+        log.info('newheadscore: {}'.format(newheadscore))
+
         if self.get_score(self.state, self.head) < self.get_score(temp_state, block) and not self.switch_reverts_finalized_block(self.head, block):
             self.set_head(block)
             log.info('Changed head to: {}'.format(block.number))
