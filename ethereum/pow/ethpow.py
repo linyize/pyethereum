@@ -58,9 +58,12 @@ def get_cache(block_number):
         cache_by_seed.pop(cache_by_seed.keys()[0])
     return c
 
-
 @lru_cache(maxsize=32)
 def check_pow(block_number, header_hash, mixhash, nonce, difficulty):
+    return check_pow_real(block_number, header_hash, mixhash, nonce, difficulty)
+
+@lru_cache(maxsize=32)
+def check_pow_real(block_number, header_hash, mixhash, nonce, difficulty):
     """Check if the proof-of-work of the block is valid.
 
     :param nonce: if given the proof of work function will be evaluated
@@ -80,9 +83,8 @@ def check_pow(block_number, header_hash, mixhash, nonce, difficulty):
     return utils.big_endian_to_int(
         mining_output[b'result']) <= 2**256 // (difficulty or 1)
 
-
 @lru_cache(maxsize=32)
-def check_pow_lowcost(block_number, header_hash, mixhash, nonce, difficulty):
+def check_pow_fake(block_number, header_hash, mixhash, nonce, difficulty):
     """Check if the proof-of-work of the block is valid.
 
     :param nonce: if given the proof of work function will be evaluated
@@ -136,8 +138,10 @@ class Miner():
             # assert blk.check_pow()
             return blk
 
-
 def mine(block_number, difficulty, mining_hash, start_nonce=0, rounds=1000):
+    return mine_real(block_number, difficulty, mining_hash, start_nonce, rounds)
+
+def mine_real(block_number, difficulty, mining_hash, start_nonce=0, rounds=1000):
     assert utils.is_numeric(start_nonce)
     cache = get_cache(block_number)
     nonce = start_nonce
@@ -155,10 +159,7 @@ def mine(block_number, difficulty, mining_hash, start_nonce=0, rounds=1000):
             return bin_nonce, o[b'mix digest']
     return None, None
 
-def mine_lowcost(block_number, difficulty, mining_hash, start_nonce=0, rounds=1000):
-    #if random.randint(1, 15) != 10: # 1-10中随机到5才出块
-    #    return None, None
-
+def mine_fake(block_number, difficulty, mining_hash, start_nonce=0, rounds=1000):
     assert utils.is_numeric(start_nonce)
     cache = get_cache(block_number)
     nonce = start_nonce

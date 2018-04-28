@@ -33,7 +33,7 @@ def initialize(state, block=None):
 
 # Check that proof of work is valid
 def check_pow(state, header):
-    assert ethpow.check_pow_lowcost(header.number, header.mining_hash, header.mixhash,
+    assert ethpow.check_pow(header.number, header.mining_hash, header.mixhash,
                             header.nonce, header.difficulty)
     assert check_imo(state, header)
     return True
