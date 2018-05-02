@@ -11,7 +11,7 @@ DEFAULT_LOGLEVEL = 'INFO'
 
 JSON_FORMAT = '%(message)s'
 
-PRINT_FORMAT = '%(levelname)s:%(name)s\t%(message)s'
+PRINT_FORMAT = '%(asctime)s  %(filename)s  %(levelname)s:%(name)s\t%(message)s'
 FILE_PREFIX = '%(asctime)s'
 
 TRACE = 5
