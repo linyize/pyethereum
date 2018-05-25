@@ -92,6 +92,8 @@ class Chain(object):
         self.time_queue = []
         self.parent_queue = {}
         self.localtime = time.time() if localtime is None else localtime
+        # add for pos not store transactions
+        self.validator = kwargs.get('validator')
 
     @property
     def head(self):
@@ -157,6 +159,9 @@ class Chain(object):
         self.db.put(b'block:' + to_string(block.header.number), block.header.hash)
         self.get_pow_difficulty(block)  # side effect: put 'score:' cache in db
         self.head_hash = block.header.hash
+        # not store transactions if I am pos node.
+        if self.validator:
+            return
         for i, tx in enumerate(block.transactions):
             self.db.put(b'txindex:' + tx.hash, rlp.encode([block.number, i]))
 
