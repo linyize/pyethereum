@@ -36,7 +36,7 @@ def snapshot_form(val):
 STATE_DEFAULTS = {
     "txindex": 0,
     "gas_used": 0,
-    "gas_limit": 3141592,
+    "gas_limit": 1 * 10**15,
     "block_number": 0,
     "block_coinbase": '\x00' * 20,
     "block_difficulty": 1,
