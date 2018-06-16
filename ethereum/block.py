@@ -191,7 +191,7 @@ BLANK_UNCLES_HASH = sha3(rlp.encode([]))
 class FakeHeader():
 
     def __init__(self, hash=b'\x00' * 32, number=0, timestamp=0, difficulty=1,
-                 gas_limit=3141592, gas_used=0, uncles_hash=BLANK_UNCLES_HASH):
+                 gas_limit=1 * 10**15, gas_used=0, uncles_hash=BLANK_UNCLES_HASH):
         self.hash = hash
         self.number = number
         self.timestamp = timestamp

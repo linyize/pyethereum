@@ -57,7 +57,7 @@ class TransactionFailed(Exception):
 from ethereum.abi import ContractTranslator
 import types
 
-STARTGAS = 3141592
+STARTGAS = 1 * 10**15
 GASPRICE = 0
 
 from ethereum.slogging import configure_logging

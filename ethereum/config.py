@@ -10,7 +10,7 @@ default_config = dict(
     # Genesis block difficulty
     GENESIS_DIFFICULTY=8192,
     # Genesis block gas limit
-    GENESIS_GAS_LIMIT=3141592,
+    GENESIS_GAS_LIMIT=1 * 10**15,
     # Genesis block prevhash, coinbase, nonce
     GENESIS_PREVHASH=b'\x00' * 32,
     GENESIS_COINBASE=b'\x00' * 20,
