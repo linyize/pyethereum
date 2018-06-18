@@ -11,6 +11,7 @@ from ethereum.securetrie import SecureTrie
 from ethereum.config import default_config, Env
 from ethereum.block import FakeHeader
 from ethereum.db import BaseDB, EphemDB, OverlayDB, RefcountDB
+from ethereum.slogging import get_logger
 from ethereum.specials import specials as default_specials
 import copy
 import sys
@@ -19,7 +20,7 @@ if sys.version_info.major == 2:
 else:
     from functools import lru_cache
 
-
+log = get_logger('eth.state')
 BLANK_HASH = utils.sha3(b'')
 BLANK_ROOT = utils.sha3rlp(b'')
 
@@ -162,6 +163,8 @@ class State():
 
     def add_block_header(self, block_header):
         self.prev_headers = [block_header] + self.prev_headers
+        # from code, nowhere to reduce the length of prev_headers. print the log to verify.
+        log.info("length of prev_headers is ", len(self.prev_headers))
 
     def get_and_cache_account(self, address):
         if address in self.cache:
