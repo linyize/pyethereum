@@ -163,8 +163,6 @@ class State():
 
     def add_block_header(self, block_header):
         self.prev_headers = [block_header] + self.prev_headers
-        # from code, nowhere to reduce the length of prev_headers. print the log to verify.
-        log.info("length of prev_headers is ", len(self.prev_headers))
 
     def get_and_cache_account(self, address):
         if address in self.cache:
