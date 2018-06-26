@@ -23,12 +23,12 @@ from ethereum.db import BaseDB, EphemDB
 from ethereum.exceptions import InvalidNonce, InsufficientStartGas, UnsignedTransaction, \
     BlockGasLimitReached, InsufficientBalance, VerificationFailed, InvalidTransaction
 import sys
+
 if sys.version_info.major == 2:
     from repoze.lru import lru_cache
 else:
     from functools import lru_cache
 from ethereum.slogging import get_logger
-
 
 null_address = b'\xff' * 20
 
@@ -49,7 +49,6 @@ def rp(tx, what, actual, target):
 
 
 class Log(rlp.Serializable):
-
     # TODO: original version used zpad (here replaced by int32.serialize); had
     # comment "why zpad"?
     fields = [
@@ -77,12 +76,11 @@ class Log(rlp.Serializable):
         }
 
     def __repr__(self):
-        return '<Log(address=%r, topics=%r, data=%r)>' %  \
-            (encode_hex(self.address), self.topics, self.data)
+        return '<Log(address=%r, topics=%r, data=%r)>' % \
+               (encode_hex(self.address), self.topics, self.data)
 
 
 class Receipt(rlp.Serializable):
-
     fields = [
         ('state_root', binary),
         ('gas_used', big_endian_int),
@@ -129,14 +127,28 @@ def config_fork_specific_validation(config, blknum, tx):
     return True
 
 
-def validate_transaction(state, tx):
+def validate_transaction_without_state(tx):
+    if not tx.sender:
+        raise UnsignedTransaction(tx)
 
+    if tx.startgas < tx.intrinsic_gas_used:
+        raise InsufficientStartGas(
+            rp(tx, 'startgas', tx.startgas, tx.intrinsic_gas_used))
+
+    if tx.sender == null_address and (tx.value != 0 or tx.gasprice != 0):
+        raise InvalidTransaction(
+            "EIP86 transactions must have 0 value and gasprice")
+
+    return True
+
+
+def validate_transaction(state, tx):
     # (1) The transaction signature is valid;
     if not tx.sender:  # sender is set and validated on Transaction initialization
         raise UnsignedTransaction(tx)
 
-    assert config_fork_specific_validation(
-        state.config, state.block_number, tx)
+    # assert config_fork_specific_validation(
+    #     state.config, state.block_number, tx)
 
     # (2) the transaction nonce is valid (equivalent to the
     #     sender account's current nonce);
@@ -419,11 +431,11 @@ def _apply_msg(ext, msg, code):
         log_msg.debug("MSG APPLY", sender=encode_hex(msg.sender), to=encode_hex(msg.to),
                       gas=msg.gas, value=msg.value, codelen=len(code),
                       data=encode_hex(
-            msg.data.extract_all()) if msg.data.size < 2500 else (
-            "data<%d>" %
-            msg.data.size),
-            pre_storage=ext.log_storage(msg.to),
-            static=msg.static, depth=msg.depth)
+                          msg.data.extract_all()) if msg.data.size < 2500 else (
+                              "data<%d>" %
+                              msg.data.size),
+                      pre_storage=ext.log_storage(msg.to),
+                      static=msg.static, depth=msg.depth)
 
     # Transfer value, instaquit if not enough
     snapshot = ext.snapshot()
@@ -492,8 +504,8 @@ def create_contract(ext, msg):
         res=res,
         gas=gas,
         dat=dat if len(dat) < 2500 else (
-            "data<%d>" %
-            len(dat)))
+                "data<%d>" %
+                len(dat)))
 
     if res:
         if not len(dat):

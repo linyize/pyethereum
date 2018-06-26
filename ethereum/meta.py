@@ -38,6 +38,7 @@ def apply_block(state, block):
         # Post-finalize (ie. add the block header to the state for now)
         post_finalize(state, block)
     except (ValueError, AssertionError) as e:
+        log.warning('block apply failed.', error=e)
         state.revert(snapshot)
         raise e
     return state
