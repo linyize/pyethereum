@@ -9,6 +9,9 @@ class TransactionQueue(object):
     def __init__(self):
         self.txs = []
 
+    def __len__(self):
+        return len(self.txs)
+
     def add_transaction(self, tx):
         self.txs.append(tx)
 
