@@ -23,7 +23,10 @@ class TransactionQueue(object):
 
     def pop_transaction(self, max_gas=9999999999,
                         max_seek_depth=16, min_gasprice=0):
-        self.txs.pop()
+        if len(self.txs) > 0:
+            return self.txs.pop()
+        else:
+            return None
 
     def diff(self, txs):
         remove_hashes = [tx.hash for tx in txs]
