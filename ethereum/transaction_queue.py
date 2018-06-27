@@ -1,57 +1,16 @@
 import heapq
+from ethereum import utils
+
 heapq.heaptop = lambda x: x[0]
-PRIO_INFINITY = -2**100
+PRIO_INFINITY = -2 ** 100
 
 
-class OrderableTx(object):
-
-    def __init__(self, prio, counter, tx):
-        self.prio = prio
-        self.counter = counter
-        self.tx = tx
-
-    def __lt__(self, other):
-        if self.prio < other.prio:
-            return True
-        elif self.prio == other.prio:
-            return self.counter < other.counter
-        else:
-            return False
-
-
-class TransactionQueue():
-
+class TransactionQueue(object):
     def __init__(self):
-        self.counter = 0
         self.txs = []
-        self.aside = []
 
-    def __len__(self):
-        return len(self.txs)
-
-    def add_transaction(self, tx, force=False):
-        prio = PRIO_INFINITY if force else -tx.gasprice
-        heapq.heappush(self.txs, OrderableTx(prio, self.counter, tx))
-        self.counter += 1
-
-    def pop_transaction(self, max_gas=9999999999,
-                        max_seek_depth=16, min_gasprice=0):
-        while len(self.aside) and max_gas >= heapq.heaptop(self.aside).prio:
-            item = heapq.heappop(self.aside)
-            item.prio = -item.tx.gasprice
-            heapq.heappush(self.txs, item)
-        for i in range(min(len(self.txs), max_seek_depth)):
-            item = heapq.heaptop(self.txs)
-            if item.tx.startgas > max_gas:
-                heapq.heappop(self.txs)
-                item.prio = item.tx.startgas
-                heapq.heappush(self.aside, item)
-            elif item.tx.gasprice >= min_gasprice or item.prio == PRIO_INFINITY:
-                heapq.heappop(self.txs)
-                return item.tx
-            else:
-                return None
-        return None
+    def add_transaction(self, tx):
+        self.txs.append(tx)
 
     def peek(self, num=None):
         if num:
@@ -59,12 +18,118 @@ class TransactionQueue():
         else:
             return self.txs
 
+    def pop_transaction(self, max_gas=9999999999,
+                        max_seek_depth=16, min_gasprice=0):
+        self.txs.pop()
+
     def diff(self, txs):
         remove_hashes = [tx.hash for tx in txs]
         keep = [item for item in self.txs if item.tx.hash not in remove_hashes]
         q = TransactionQueue()
         q.txs = keep
         return q
+
+    @staticmethod
+    def sort_same_sender(txs):
+        result = []
+        for tx in txs:
+            index = 0
+            while index < len(result) and tx.nonce > result[index].nonce:
+                index += 1
+            result.insert(index, tx)
+        return result
+
+    def sort(self):
+        senders = dict()
+        txs_bucket = dict()
+        multiple_txs = False
+        for tx in self.txs:
+            sender = utils.encode_hex(utils.normalize_address(tx.sender))
+            if sender in senders:
+                senders[sender] = senders[sender] + 1
+                multiple_txs = True
+            else:
+                senders[sender] = 1
+        if not multiple_txs:
+            return
+        new_txs = []
+        for tx in self.txs:
+            sender = utils.encode_hex(utils.normalize_address(tx.sender))
+            if senders[sender] == 1:
+                new_txs.append(tx)
+            else:
+                if sender not in txs_bucket:
+                    txs_bucket[sender] = []
+
+                txs_bucket[sender].append(tx)
+        for txs in txs_bucket.values():
+            new_txs.extend(TransactionQueue.sort_same_sender(txs))
+
+        self.txs = new_txs
+
+
+# class OrderableTx(object):
+#
+#     def __init__(self, prio, counter, tx):
+#         self.prio = prio
+#         self.counter = counter
+#         self.tx = tx
+#
+#     def __lt__(self, other):
+#         if self.prio < other.prio:
+#             return True
+#         elif self.prio == other.prio:
+#             return self.counter < other.counter
+#         else:
+#             return False
+#
+#
+# class TransactionQueue():
+#
+#     def __init__(self):
+#         self.counter = 0
+#         self.txs = []
+#         self.aside = []
+#
+#     def __len__(self):
+#         return len(self.txs)
+#
+#     def add_transaction(self, tx, force=False):
+#         prio = PRIO_INFINITY if force else -tx.gasprice
+#         heapq.heappush(self.txs, OrderableTx(prio, self.counter, tx))
+#         self.counter += 1
+#
+#     def pop_transaction(self, max_gas=9999999999,
+#                         max_seek_depth=16, min_gasprice=0):
+#         while len(self.aside) and max_gas >= heapq.heaptop(self.aside).prio:
+#             item = heapq.heappop(self.aside)
+#             item.prio = -item.tx.gasprice
+#             heapq.heappush(self.txs, item)
+#         for i in range(min(len(self.txs), max_seek_depth)):
+#             item = heapq.heaptop(self.txs)
+#             if item.tx.startgas > max_gas:
+#                 heapq.heappop(self.txs)
+#                 item.prio = item.tx.startgas
+#                 heapq.heappush(self.aside, item)
+#             elif item.tx.gasprice >= min_gasprice or item.prio == PRIO_INFINITY:
+#                 heapq.heappop(self.txs)
+#                 return item.tx
+#             else:
+#                 return None
+#         return None
+#
+#     def peek(self, num=None):
+#         if num:
+#             return self.txs[0:num]
+#         else:
+#             return self.txs
+#
+#     def diff(self, txs):
+#         remove_hashes = [tx.hash for tx in txs]
+#         keep = [item for item in self.txs if item.tx.hash not in remove_hashes]
+#         q = TransactionQueue()
+#         q.txs = keep
+#         return q
 
 
 def make_test_tx(s=100000, g=50, data='', nonce=0):
