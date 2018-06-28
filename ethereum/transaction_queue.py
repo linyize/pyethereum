@@ -60,7 +60,7 @@ class TransactionQueue(object):
     def diff(self, txs):
         remove_hashes = [tx.hash for tx in txs]
         # remove already mined txs
-        keep_after_hash = [item for item in self.txs if item.tx.hash not in remove_hashes]
+        keep_after_hash = [tx for tx in self.txs if tx.hash not in remove_hashes]
 
         # get max nonce mined for each sender
         nonce_dict = dict()
