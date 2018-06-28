@@ -4,20 +4,20 @@ from ethereum import utils
 heapq.heaptop = lambda x: x[0]
 PRIO_INFINITY = -2 ** 100
 
-class OrderableTx(object):
-
-    def __init__(self, prio, counter, tx):
-        self.prio = prio
-        self.counter = counter
-        self.tx = tx
-
-    def __lt__(self, other):
-        if self.prio < other.prio:
-            return True
-        elif self.prio == other.prio:
-            return self.counter < other.counter
-        else:
-            return False
+# class OrderableTx(object):
+#
+#     def __init__(self, prio, counter, tx):
+#         self.prio = prio
+#         self.counter = counter
+#         self.tx = tx
+#
+#     def __lt__(self, other):
+#         if self.prio < other.prio:
+#             return True
+#         elif self.prio == other.prio:
+#             return self.counter < other.counter
+#         else:
+#             return False
 
 class TransactionQueue(object):
     def __init__(self):
@@ -26,8 +26,22 @@ class TransactionQueue(object):
     def __len__(self):
         return len(self.txs)
 
+    @staticmethod
+    def sort_same_sender(txs):
+        result = []
+        for tx in txs:
+            index = 0
+            while index < len(result) and tx.nonce > result[index].nonce:
+                index += 1
+            result.insert(index, tx)
+        return result
+
+    @staticmethod
+    def address_to_string(address):
+        return utils.encode_hex(utils.normalize_address(address))
+
     def add_transaction(self, tx):
-        self.txs.append(OrderableTx(0, 0, tx))
+        self.txs.append(tx)
 
     def peek(self, num=None):
         if num:
@@ -38,33 +52,50 @@ class TransactionQueue(object):
     def pop_transaction(self, max_gas=9999999999,
                         max_seek_depth=16, min_gasprice=0):
         if len(self.txs) > 0:
-            return self.txs.pop().tx
+            return self.txs.pop()
         else:
             return None
 
+    # tx from txs parameter no ordered wrapper.
     def diff(self, txs):
         remove_hashes = [tx.hash for tx in txs]
-        keep = [item for item in self.txs if item.tx.hash not in remove_hashes]
+        # remove already mined txs
+        keep_after_hash = [item for item in self.txs if item.tx.hash not in remove_hashes]
+
+        # get max nonce mined for each sender
+        nonce_dict = dict()
+        for tx in txs:
+            sender = TransactionQueue.address_to_string(tx.sender)
+            if sender not in nonce_dict:
+                nonce_dict[sender] = tx.nonce
+            else:
+                nonce_dict[sender] = max(tx.nonce, nonce_dict[sender])
+
+        keep = []
+        # remove old failed txs if nonce smaller than mined hash.
+        for tx in keep_after_hash:
+            sender = TransactionQueue.address_to_string(tx.sender)
+            # all ff reserved for casper usage.
+            if tx.sender == b'\xff' * 20:
+                keep.append(tx)
+            elif sender in nonce_dict:
+                if tx.nonce > nonce_dict[sender]:
+                    keep.append(tx)
+                else:
+                    pass
+            else:
+                keep.append(tx)
+
         q = TransactionQueue()
         q.txs = keep
         return q
-
-    @staticmethod
-    def sort_same_sender(txs):
-        result = []
-        for tx in txs:
-            index = 0
-            while index < len(result) and tx.tx.nonce > result[index].tx.nonce:
-                index += 1
-            result.insert(index, tx)
-        return result
 
     def sort(self):
         senders = dict()
         txs_bucket = dict()
         multiple_txs = False
         for tx in self.txs:
-            sender = utils.encode_hex(utils.normalize_address(tx.tx.sender))
+            sender = TransactionQueue.address_to_string(tx.sender)
             if sender in senders:
                 senders[sender] = senders[sender] + 1
                 multiple_txs = True
@@ -74,7 +105,7 @@ class TransactionQueue(object):
             return
         new_txs = []
         for tx in self.txs:
-            sender = utils.encode_hex(utils.normalize_address(tx.tx.sender))
+            sender = TransactionQueue.address_to_string(tx.sender)
             if senders[sender] == 1:
                 new_txs.append(tx)
             else:

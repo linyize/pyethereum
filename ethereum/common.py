@@ -141,15 +141,17 @@ def add_transactions(state, block, txqueue, min_gasprice=0):
     log.info('Adding transactions, %d in txqueue, %d dunkles' %
              (len(txqueue.txs), pre_txs))
     transactions, caspert_vote_transactions = [], []
-    for ordered_tx in txqueue.txs:
-        if ordered_tx.tx.to == state.config['CASPER_ADDRESS'] and ordered_tx.tx.data[0:4] == b'\xe9\xdc\x06\x14':
-            caspert_vote_transactions.append(ordered_tx)
+    for tx in txqueue.txs:
+        if tx.to == state.config['CASPER_ADDRESS'] and tx.data[0:4] == b'\xe9\xdc\x06\x14':
+            caspert_vote_transactions.append(tx)
         else:
-            transactions.append(ordered_tx)
-    txqueue.tx = transactions + caspert_vote_transactions
+            transactions.append(tx)
+    txqueue.txs = transactions + caspert_vote_transactions
+    log.info("put casper at the end of.")
     while True:
         tx = txqueue.pop_transaction(max_gas=state.gas_limit - state.gas_used,
                                      min_gasprice=min_gasprice)
+        log.info("get tx:", tx=tx)
         if tx is None:
             break
         try:
