@@ -38,7 +38,7 @@ class TransactionQueue(object):
     def pop_transaction(self, max_gas=9999999999,
                         max_seek_depth=16, min_gasprice=0):
         if len(self.txs) > 0:
-            return self.txs.pop()
+            return self.txs.pop().tx
         else:
             return None
 
