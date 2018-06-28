@@ -4,6 +4,20 @@ from ethereum import utils
 heapq.heaptop = lambda x: x[0]
 PRIO_INFINITY = -2 ** 100
 
+class OrderableTx(object):
+
+    def __init__(self, prio, counter, tx):
+        self.prio = prio
+        self.counter = counter
+        self.tx = tx
+
+    def __lt__(self, other):
+        if self.prio < other.prio:
+            return True
+        elif self.prio == other.prio:
+            return self.counter < other.counter
+        else:
+            return False
 
 class TransactionQueue(object):
     def __init__(self):
@@ -13,7 +27,7 @@ class TransactionQueue(object):
         return len(self.txs)
 
     def add_transaction(self, tx):
-        self.txs.append(tx)
+        self.txs.append(OrderableTx(0, 0, tx))
 
     def peek(self, num=None):
         if num:
@@ -40,7 +54,7 @@ class TransactionQueue(object):
         result = []
         for tx in txs:
             index = 0
-            while index < len(result) and tx.nonce > result[index].nonce:
+            while index < len(result) and tx.tx.nonce > result[index].tx.nonce:
                 index += 1
             result.insert(index, tx)
         return result
@@ -50,7 +64,7 @@ class TransactionQueue(object):
         txs_bucket = dict()
         multiple_txs = False
         for tx in self.txs:
-            sender = utils.encode_hex(utils.normalize_address(tx.sender))
+            sender = utils.encode_hex(utils.normalize_address(tx.tx.sender))
             if sender in senders:
                 senders[sender] = senders[sender] + 1
                 multiple_txs = True
@@ -60,7 +74,7 @@ class TransactionQueue(object):
             return
         new_txs = []
         for tx in self.txs:
-            sender = utils.encode_hex(utils.normalize_address(tx.sender))
+            sender = utils.encode_hex(utils.normalize_address(tx.tx.sender))
             if senders[sender] == 1:
                 new_txs.append(tx)
             else:
@@ -73,22 +87,6 @@ class TransactionQueue(object):
 
         self.txs = new_txs
 
-
-# class OrderableTx(object):
-#
-#     def __init__(self, prio, counter, tx):
-#         self.prio = prio
-#         self.counter = counter
-#         self.tx = tx
-#
-#     def __lt__(self, other):
-#         if self.prio < other.prio:
-#             return True
-#         elif self.prio == other.prio:
-#             return self.counter < other.counter
-#         else:
-#             return False
-#
 #
 # class TransactionQueue():
 #
